@@ -4,13 +4,19 @@
 
 This document records the current v1 MVP demo flow after running local seed data.
 
+## Related Documents
+
+- `docs\development\local-setup.md` for prerequisites and command entry points
+- `docs\development\release-readiness-checklist.md` for the final validation gate before demo/handoff
+- `docs\development\v1-handoff-summary.md` for current scope, limitations, and follow-up context
+
 ## Prerequisites
 
 - `AUTH_MODE=dev_stub`
 - `DB_PATH` points to a local SQLite file
 - `just backend-seed` has completed successfully
 - backend API is running through `just backend-start`
-- frontend app is running through `just frontend-start`
+- frontend app is running through `just frontend-start` with local `/api/**` proxying to the backend
 
 ## Seeded Demo Dataset
 
@@ -68,3 +74,4 @@ Expected outcome:
 
 - The seed command is local/dev only and must not be used outside `AUTH_MODE=dev_stub`
 - Player smoke is intentionally defined as API/debug-header smoke, not an in-app role switcher
+- This document is the source of truth for demo smoke details; release/handoff docs should link here rather than duplicate the full walkthrough

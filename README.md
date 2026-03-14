@@ -33,6 +33,16 @@ This repository currently includes the completed v1 foundation baseline plus pla
 6. After implementation is completed, move the task document into:
    - `docs\plans\v1-mvp\subagent-work-items\completed\<date>\`
 
+## Development Documentation
+
+Use these docs as the canonical entry points for day-to-day development, demo prep, and handoff:
+
+- `docs\development\local-setup.md` for local bootstrap, common commands, and seed/startup entry points
+- `docs\development\demo-smoke-check.md` for the deterministic dataset and manager/player smoke paths
+- `docs\development\release-readiness-checklist.md` for the pre-demo / pre-release validation gate
+- `docs\development\v1-handoff-summary.md` for the current v1 scope, constraints, and follow-up handoff notes
+- `WORKFLOW.md` for the proposal / review / approval / implementation process
+
 ### Subagent collaboration
 
 - Subagents should work in `git worktree` mode by default.
@@ -86,13 +96,16 @@ The current approved plan is tracked under:
 
 ## Next Steps
 
-Phase 1 foundation has been validated across:
+The current v1 baseline has been validated across:
 
 - Angular frontend build and unit tests
 - Go backend unit tests
 - SQLite migration bootstrap
 - backend startup and `/health` smoke check
 
-The next recommended review item is `release-readiness`.
+The current release-readiness and handoff references live under:
+
+- `docs\development\release-readiness-checklist.md`
+- `docs\development\v1-handoff-summary.md`
 
 The backend currently defaults to a local SQLite database at `backend\data\golf_team_manager.sqlite` and runs baseline migrations on startup.

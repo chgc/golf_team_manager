@@ -43,7 +43,7 @@ frontend-install:
     Set-Location frontend; pnpm.cmd install
 
 frontend-start:
-    Set-Location frontend; pnpm.cmd exec ng serve
+    Set-Location frontend; pnpm.cmd exec ng serve --proxy-config src/proxy.conf.json
 
 frontend-build:
     Set-Location frontend; pnpm.cmd exec ng build

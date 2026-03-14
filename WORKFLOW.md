@@ -138,8 +138,10 @@ just backend-start
 ## 目前狀態
 
 - Phase 1 foundation、Phase 2 shared domain / backend / frontend foundations、Phase 3 auth foundation、Phase 4 players-feature、Phase 5 sessions-feature、Phase 6 registrations-feature、Phase 7 reservation-report、Phase 8 qa-and-seed-data 已完成
-- 目前正在依相同流程往 Phase 7+ 推進
-- 下一個待 review proposal 為 `release-readiness`
+- `release-readiness` 已完成，相關 release/demo/handoff 文件已落地
+- release/demo/handoff 入口文件位於：
+  - `docs\development\release-readiness-checklist.md`
+  - `docs\development\v1-handoff-summary.md`
 - backend 預設使用本機 SQLite：
   - `backend\data\golf_team_manager.sqlite`
 
