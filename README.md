@@ -29,12 +29,14 @@ This repository currently focuses on planning and Phase 1 bootstrap work.
 3. The proposal must be reviewed and approved before implementation starts.
 4. Approved proposals live under:
    - `docs\plans\v1-mvp\subagent-work-items\approved\`
+5. After a proposal is moved to `approved`, commit that approval state before starting implementation.
 
 ### Subagent collaboration
 
 - Subagents should work in `git worktree` mode by default.
 - Work should stay isolated per task to keep planning, review, and implementation clean.
 - If a task scope changes, update the proposal doc and re-run review before continuing.
+- Implementation in a worktree starts only after the approved task document has been committed.
 
 ### Frontend workflow
 

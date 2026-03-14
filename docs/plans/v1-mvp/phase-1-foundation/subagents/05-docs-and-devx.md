@@ -10,6 +10,7 @@
 - 目錄用途說明
 - 技術決策與 Phase 1 邊界說明
 - 前後端與 DB 的驗收命令整理
+- root `justfile` 快速啟動指令整理
 
 ## 範圍外
 
@@ -20,14 +21,16 @@
 
 - `docs\development\local-setup.md`
 - `docs\architecture\repo-structure.md`
+- `justfile`
 - 視需要更新 root `README.md`
 
 ## 建議步驟
 
 1. 盤點 workspace、frontend、backend、db 實際輸出
 2. 寫成本地啟動順序
-3. 記錄常用命令與驗證方式
-4. 記錄 Phase 1 不做的內容，避免後續 scope 漂移
+3. 在 root 建立 `justfile` 作為常用快速啟動入口
+4. 記錄常用命令與驗證方式
+5. 記錄 Phase 1 不做的內容，避免後續 scope 漂移
 
 ## 驗收標準
 

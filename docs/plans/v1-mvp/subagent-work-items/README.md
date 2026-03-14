@@ -11,7 +11,8 @@
 3. 工作文件放在 `pending\`
 4. 等待 review
 5. 只有在**使用者明確指示**後，才可將文件移到 `approved\`
-6. 只有 `approved\` 的工作文件才能進入實作
+6. 文件移到 `approved\` 後，需先將這次核可結果 commit
+7. 完成 commit 後，才可在 `git worktree` 環境下開始實作
 
 ## 目錄
 
@@ -51,5 +52,6 @@ subagent-work-items\
 
 - 未經 review 核可，不得開始實作
 - 除非使用者明確指示，不能自動將文件從 `pending\` 移到 `approved\`
+- 文件進入 `approved\` 後，未完成 commit 前不得開始實作
 - 若工作範圍變更，需更新文件並重新 review
 - 文件內容應與 `Phase 0`、`Phase 1` 規範保持一致

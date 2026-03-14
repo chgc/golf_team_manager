@@ -88,6 +88,7 @@
 - Angular 開發規範明確要求使用 Angular CLI 與 Angular CLI MCP best practices，並使用 plain CSS；前端套件管理使用 pnpm；若有 grid table 顯示需求，可使用 ag-grid community
 - Go 開發規範明確要求遵循 Google Go style guide、編輯後執行 `gofmt`、補齊測試並確保受影響函式可被測試驗證，且 backend framework 使用 Gin、禁止使用 ORM library
 - 進入實作前，規劃文件需先 commit 並 push；各 subagent 需先提交工作文件、待 review 後才可開工
+- 當任務文件移到 `approved` 後，需先 commit，之後才可在 `git worktree` 環境下開始實作
 
 ### Phase 1 — 專案骨架與開發基礎
 

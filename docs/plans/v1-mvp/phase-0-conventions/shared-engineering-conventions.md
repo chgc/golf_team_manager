@@ -68,6 +68,7 @@
 - 該文件需提交到 `docs\plans\v1-mvp\subagent-work-items\pending\`
 - 文件經 review 核可前，不得開始實作
 - 只有在使用者明確指示後，文件才可從 `docs\plans\v1-mvp\subagent-work-items\pending\` 移到 `docs\plans\v1-mvp\subagent-work-items\approved\`
+- 文件移到 `approved` 後，需先 commit，之後才可在 `git worktree` 環境中開始實作
 - 若 scope 變更，需更新文件並重新 review
 
 ## Subagent 交接要求
