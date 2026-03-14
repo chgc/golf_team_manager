@@ -92,6 +92,8 @@ Phase 1 foundation has been validated across:
 - SQLite migration bootstrap
 - backend startup and `/health` smoke check
 
-The next recommended review item is `qa-and-seed-data`.
+The next approved work item is `qa-and-seed-data`.
+
+The next recommended review item is `release-readiness`.
 
 The backend currently defaults to a local SQLite database at `backend\data\golf_team_manager.sqlite` and runs baseline migrations on startup.
