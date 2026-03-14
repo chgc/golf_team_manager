@@ -1,0 +1,17 @@
+<section class="feature-page">
+  <mat-card appearance="outlined">
+    <mat-card-header>
+      <mat-card-title>Players shell</mat-card-title>
+      <mat-card-subtitle>Manager-facing player workflows will land here.</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      @for (item of focusAreas; track item.title) {
+        <div class="focus-item">
+          <h2>{{ item.title }}</h2>
+          <p>{{ item.description }}</p>
+        </div>
+      }
+    </mat-card-content>
+  </mat-card>
+</section>

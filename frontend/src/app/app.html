@@ -1,5 +1,18 @@
 <mat-toolbar color="primary">
-  <span>{{ applicationTitle }}</span>
+  <span class="app-title">{{ applicationTitle }}</span>
+
+  <nav aria-label="Primary" class="primary-nav">
+    @for (item of navigationItems; track item.path) {
+      <a
+        mat-button
+        [routerLink]="item.path"
+        routerLinkActive="active-link"
+        [routerLinkActiveOptions]="{ exact: item.path === '/' }"
+      >
+        {{ item.label }}
+      </a>
+    }
+  </nav>
 </mat-toolbar>
 
 <main class="app-shell">

@@ -1,20 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
 
-import { HomePage } from './home-page';
+import { SessionListPage } from './session-list-page';
 
-describe('HomePage', () => {
-  let component: HomePage;
-  let fixture: ComponentFixture<HomePage>;
+describe('SessionListPage', () => {
+  let component: SessionListPage;
+  let fixture: ComponentFixture<SessionListPage>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [HomePage],
-      providers: [provideRouter([])],
+      imports: [SessionListPage]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(HomePage);
+    fixture = TestBed.createComponent(SessionListPage);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

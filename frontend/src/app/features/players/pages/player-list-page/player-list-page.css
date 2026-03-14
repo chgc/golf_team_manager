@@ -1,0 +1,18 @@
+.feature-page {
+  max-width: 960px;
+}
+
+.focus-item + .focus-item {
+  border-top: 1px solid #e0e0e0;
+  margin-top: 16px;
+  padding-top: 16px;
+}
+
+.focus-item h2 {
+  font-size: 1rem;
+  margin: 0 0 8px;
+}
+
+.focus-item p {
+  margin: 0;
+}

@@ -1,22 +1,40 @@
 <section class="home-page">
-  <mat-card appearance="outlined">
+  <mat-card appearance="outlined" class="hero-card">
     <mat-card-header>
-      <mat-card-title>Golf Team Manager</mat-card-title>
-      <mat-card-subtitle>Phase 1 frontend shell</mat-card-subtitle>
+      <mat-card-title>Frontend shell baseline</mat-card-title>
+      <mat-card-subtitle>Phase 2 foundation for feature-aligned Angular work</mat-card-subtitle>
     </mat-card-header>
 
     <mat-card-content>
       <p>
-        The Angular workspace is ready for the next feature phases, including player management,
-        session management, registrations, and reporting.
+        The Angular application is now aligned with the shared domain schema and backend API
+        foundation. Each feature route has a dedicated landing page and data-access baseline.
       </p>
 
       <ul>
-        <li>Angular CLI with pnpm</li>
-        <li>Plain CSS styling</li>
-        <li>Angular Material baseline</li>
-        <li>Feature-first app structure</li>
+        <li>Angular CLI workspace with standalone components</li>
+        <li>Lazy-loaded feature routes</li>
+        <li>Typed API service baselines</li>
+        <li>Plain CSS with Angular Material shell</li>
       </ul>
     </mat-card-content>
   </mat-card>
+
+  <div class="section-grid">
+    @for (section of shellSections; track section.path) {
+      <mat-card appearance="outlined">
+        <mat-card-header>
+          <mat-card-title>{{ section.title }}</mat-card-title>
+        </mat-card-header>
+
+        <mat-card-content>
+          <p>{{ section.description }}</p>
+        </mat-card-content>
+
+        <mat-card-actions>
+          <a mat-button color="primary" [routerLink]="section.path">Open {{ section.title }}</a>
+        </mat-card-actions>
+      </mat-card>
+    }
+  </div>
 </section>

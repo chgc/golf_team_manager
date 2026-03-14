@@ -1,0 +1,17 @@
+<section class="feature-page">
+  <mat-card appearance="outlined">
+    <mat-card-header>
+      <mat-card-title>Sessions shell</mat-card-title>
+      <mat-card-subtitle>Session management pages will be assembled on this route.</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      @for (item of focusAreas; track item.title) {
+        <div class="focus-item">
+          <h2>{{ item.title }}</h2>
+          <p>{{ item.description }}</p>
+        </div>
+      }
+    </mat-card-content>
+  </mat-card>
+</section>

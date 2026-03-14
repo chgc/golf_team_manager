@@ -52,6 +52,7 @@ This document explains the current repository layout for `golf_team_manager` aft
 - Managed with `pnpm`
 - Generated and extended with Angular CLI
 - Uses plain CSS instead of SCSS
+- Shared models and feature data-access services now define the frontend shell baseline
 
 ### `backend\`
 
