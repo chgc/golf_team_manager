@@ -51,7 +51,7 @@
 - 接手 backend 任務前，先閱讀 `backend-go-conventions.md`
 - 涉及 API 契約、錯誤格式、時間欄位、測試要求時，先閱讀 `shared-engineering-conventions.md`
 - subagent 開發功能時，預設使用 **git worktree** 模式
-- subagent 在開始實作前，必須先提交工作文件供 review，核可後才可開工
+- subagent 在開始實作前，必須先提交工作文件供 review；只有在使用者明確指示後，文件才可移到 `approved` 並開工
 
 ## 與 Phase 1 的關係
 

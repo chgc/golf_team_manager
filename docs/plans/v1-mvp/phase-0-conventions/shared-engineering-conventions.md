@@ -67,7 +67,7 @@
 - 每個 subagent 在開始實作前，都必須先整理「此次要做的事情」成文件
 - 該文件需提交到 `docs\plans\v1-mvp\subagent-work-items\pending\`
 - 文件經 review 核可前，不得開始實作
-- review 通過後，文件移到 `docs\plans\v1-mvp\subagent-work-items\approved\`
+- 只有在使用者明確指示後，文件才可從 `docs\plans\v1-mvp\subagent-work-items\pending\` 移到 `docs\plans\v1-mvp\subagent-work-items\approved\`
 - 若 scope 變更，需更新文件並重新 review
 
 ## Subagent 交接要求
