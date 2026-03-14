@@ -126,3 +126,10 @@
     grid-template-columns: 1fr;
   }
 }
+
+@media (width <= 720px) {
+  .session-row,
+  .registration-row {
+    flex-direction: column;
+  }
+}

@@ -67,3 +67,9 @@
     grid-template-columns: 1fr;
   }
 }
+
+@media (width <= 720px) {
+  .player-row {
+    flex-direction: column;
+  }
+}

@@ -3,14 +3,27 @@
   min-height: 100%;
 }
 
+mat-toolbar {
+  align-items: center;
+  column-gap: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  height: auto;
+  min-height: 64px;
+  padding-block: 12px;
+}
+
 .app-title {
+  flex: 0 1 auto;
   font-weight: 600;
+  min-width: 0;
 }
 
 .primary-nav {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
-  margin-left: 16px;
+  margin-left: auto;
 }
 
 .active-link {
@@ -20,6 +33,7 @@
 .identity-badge {
   align-items: center;
   display: flex;
+  flex-wrap: wrap;
   font-size: 0.875rem;
   gap: 8px;
   margin-left: 16px;
@@ -33,4 +47,21 @@
   margin: 0 auto;
   max-width: 1200px;
   padding: 24px;
+}
+
+@media (width <= 720px) {
+  mat-toolbar {
+    align-items: flex-start;
+  }
+
+  .app-title,
+  .primary-nav,
+  .identity-badge {
+    flex: 1 1 100%;
+    margin-left: 0;
+  }
+
+  .app-shell {
+    padding: 16px;
+  }
 }
