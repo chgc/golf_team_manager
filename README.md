@@ -5,7 +5,7 @@ Golf Team Manager is a greenfield repository for a golf-team management system b
 - frontend: Angular + Angular Material + plain CSS + pnpm
 - backend: Go + Gin + SQLite
 
-This repository currently focuses on planning and Phase 1 bootstrap work.
+This repository currently focuses on the completed Phase 1 foundation baseline and the transition into Phase 2 domain/schema work.
 
 ## Repository Layout
 
@@ -85,10 +85,13 @@ The current approved plan is tracked under:
 
 ## Next Steps
 
-Phase 1 foundation bootstrap is now in place across workspace, frontend, backend, docs, and SQLite migration baseline.
+Phase 1 foundation has been validated across:
 
-The next ready task is:
+- Angular frontend build and unit tests
+- Go backend unit tests
+- SQLite migration bootstrap
+- backend startup and `/health` smoke check
 
-- `phase1-integration-check`
+The next ready task is `shared-domain-schema`.
 
 The backend currently defaults to a local SQLite database at `backend\data\golf_team_manager.sqlite` and runs baseline migrations on startup.

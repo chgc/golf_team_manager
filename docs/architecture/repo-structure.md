@@ -2,24 +2,41 @@
 
 ## Purpose
 
-This document explains the current repository layout for `golf_team_manager` during Phase 1 bootstrap work.
+This document explains the current repository layout for `golf_team_manager` after the Phase 1 foundation baseline was completed and validated.
 
 ## Current Layout
 
 ```text
 .
 ├── backend\
-│   └── .gitkeep
+│   ├── cmd\
+│   │   ├── api\
+│   │   └── migrate\
+│   ├── data\
+│   ├── internal\
+│   │   ├── app\
+│   │   ├── config\
+│   │   ├── db\
+│   │   └── http\
+│   └── migrations\
 ├── docs\
 │   ├── architecture\
 │   │   └── repo-structure.md
 │   ├── development\
-│   │   └── local-setup.md
+│   │   ├── local-setup.md
+│   │   └── phase-1-validation.md
 │   └── plans\
 │       └── v1-mvp\
 ├── frontend\
-│   └── .gitkeep
+│   ├── src\
+│   │   └── app\
+│   │       ├── core\
+│   │       ├── features\
+│   │       └── shared\
+│   ├── public\
+│   └── angular.json
 ├── .gitignore
+├── WORKFLOW.md
 ├── justfile
 └── README.md
 ```
@@ -37,6 +54,7 @@ This document explains the current repository layout for `golf_team_manager` dur
 
 - Go backend root
 - Gin-based HTTP service
+- SQLite config, connection, and migration baseline
 - No ORM usage
 - Must follow Google Go style guidance, `gofmt`, and test requirements
 
@@ -49,6 +67,7 @@ This document explains the current repository layout for `golf_team_manager` dur
 - Local setup instructions
 - Developer workflow notes
 - Quick-start guidance
+- Validation records for completed phases
 
 ### `docs\plans\`
 
@@ -71,3 +90,4 @@ pending\  ->  approved\  ->  completed\YYYY-MM-DD\
 - Subagent work is designed around `git worktree`
 - The root `justfile` is the quick command entry point
 - Planning and governance docs define the source-of-truth workflow
+- Phase 1 foundation has been validated; Phase 2 should now build on the existing frontend, backend, and SQLite baseline

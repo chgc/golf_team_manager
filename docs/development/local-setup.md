@@ -41,6 +41,10 @@ just backend-migrate
 just backend-start
 ```
 
+Validation results for the completed Phase 1 baseline are tracked in:
+
+- `docs\development\phase-1-validation.md`
+
 ### 3. Subagent implementation flow
 
 1. Create a proposal in `pending\`
@@ -64,8 +68,7 @@ just backend-start
 
 This document should be updated after:
 
-- Angular workspace bootstrap
-- Go backend bootstrap
-- SQLite migration bootstrap
+- shared domain schema and API contract work
+- Phase 2 feature modules start landing
 
-At that point, concrete frontend and backend startup commands should be added.
+At that point, the setup guide should expand from bootstrap validation into feature-development workflows.
