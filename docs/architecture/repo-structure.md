@@ -17,6 +17,7 @@ This document explains the current repository layout for `golf_team_manager` aft
 │   │   ├── app\
 │   │   ├── config\
 │   │   ├── db\
+│   │   ├── domain\
 │   │   └── http\
 │   └── migrations\
 ├── docs\
@@ -55,6 +56,7 @@ This document explains the current repository layout for `golf_team_manager` aft
 - Go backend root
 - Gin-based HTTP service
 - SQLite config, connection, and migration baseline
+- Shared domain structs, DTOs, and validation live under `internal\domain\`
 - No ORM usage
 - Must follow Google Go style guidance, `gofmt`, and test requirements
 
