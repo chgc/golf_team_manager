@@ -20,8 +20,9 @@
    - `docs\plans\v1-mvp\golf-team-manager-implementation-plan.md`
    - `docs\plans\v1-mvp\phase-0-conventions\`
    - `docs\plans\v1-mvp\phase-1-foundation\`
-2. 規劃 / 規範文件必須先完成並 `commit` + `push`
-3. 確認要執行的工作項目已完成 review gate，且符合目前規範
+2. 主規劃 / 規範文件必須先完成並 `commit` + `push`
+3. 每個 subagent 在開始實作前，都必須先提交自己的工作文件並通過 review gate
+4. 只有 review-approved 的工作項目，才可以進入 implementation
 
 ## 標準工作流程
 
@@ -30,6 +31,10 @@
 每個 subagent 在開始實作前，都要先建立工作文件，放在：
 
 - `docs\plans\v1-mvp\subagent-work-items\pending\`
+
+建議檔名格式：
+
+- `<phase>-<area>-<short-task-name>.md`
 
 工作文件至少應包含：
 
@@ -40,16 +45,21 @@
 - 技術決策與依據
 - 風險 / 待確認事項
 - 驗收方式
+- review 狀態欄位
+- feedback 區塊（記錄 reviewer agents 的建議與後續修正）
 
-### 2. 等待 review
+### 2. 進入 review gate
 
-- 工作文件建立後先等待 review
-- 未經 review 核可，不得開始實作
+- 工作文件建立後先等待 review，不得直接開工
+- review 預設由兩個獨立 reviewer agent 進行
+- reviewer agent 的建議與 blocking issue 需回寫到 proposal 的 `Feedback` 區塊
+- 若兩個 reviewer agent 都沒有 blocking issue，該工作文件即可視為核可
+- 若任一 reviewer agent 提出 blocking issue，需先修正 proposal 並重新 review
 - 若 scope 變更，需更新工作文件並重新 review
 
 ### 3. 移到 approved
 
-只有在**使用者明確指示**後，才可將工作文件移到：
+通過 review gate 後，將工作文件移到：
 
 - `docs\plans\v1-mvp\subagent-work-items\approved\`
 
@@ -58,6 +68,7 @@
 - 文件移到 `approved` 後，必須先將核可狀態 `commit`
 - 完成 approval commit 後，才可在 `git worktree` 環境下開始實作
 - 實作應維持每個 task / subagent 的 worktree 隔離
+- frontend worktree 預期透過 `pnpm` 共用 `node_modules`
 
 ### 5. 完成實作後收尾
 
@@ -72,8 +83,8 @@
 
 ```text
 docs\plans\v1-mvp\subagent-work-items\
-├── pending\        # 等待 review
-├── approved\       # 已核可且應先完成 approval commit
+├── pending\        # 工作文件建立完成，等待 review gate
+├── approved\       # 已通過 review gate，且應先完成 approval commit
 └── completed\
     └── YYYY-MM-DD\ # 已完成的工作文件
 ```
@@ -83,6 +94,8 @@ docs\plans\v1-mvp\subagent-work-items\
 - subagent 預設使用 `git worktree` 模式作業
 - 工作應盡量依 task 隔離，避免不同實作互相干擾
 - 規劃與文件需能支援多個 worktree 並行使用
+- frontend worktree 之間預期透過 `pnpm` 共用 `node_modules`
+- 未通過 review gate 的 proposal，不得直接進入實作
 - 如果任務 scope 改變，不要直接硬做；先更新文件並重跑 review 流程
 
 ## Frontend workflow
@@ -123,8 +136,9 @@ just backend-start
 
 ## 目前狀態
 
-- 目前 repo 主要聚焦於 Phase 1 bootstrap 與整體基線建置
-- 下一個 ready task 為 `phase1-integration-check`
+- Phase 1 foundation、Phase 2 shared domain / backend / frontend foundations、Phase 3 auth foundation 已完成
+- 目前正在依相同流程往 Phase 4+ 推進
+- `players-feature` 已通過 dual-agent review 並進入 implementation
 - backend 預設使用本機 SQLite：
   - `backend\data\golf_team_manager.sqlite`
 
@@ -133,4 +147,5 @@ just backend-start
 - `README.md`
 - `docs\development\local-setup.md`
 - `docs\plans\v1-mvp\subagent-work-items\README.md`
+- `docs\plans\v1-mvp\subagent-work-items\templates\subagent-task-template.md`
 - `docs\plans\v1-mvp\phase-0-conventions\shared-engineering-conventions.md`
