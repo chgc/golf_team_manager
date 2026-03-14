@@ -31,6 +31,10 @@
 - 不實作任何產品功能
 - 不決定 API 契約細節
 
+## Dependencies
+
+- None
+
 ## Planned Changes
 
 - 預計修改的資料夾 / 檔案：

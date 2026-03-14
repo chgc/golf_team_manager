@@ -29,6 +29,10 @@
 - 不做認證流程
 - 無 grid table 需求前，不引入 `ag-grid community`
 
+## Dependencies
+
+- `phase1-workspace-scaffold` must be completed first
+
 ## Planned Changes
 
 - 預計修改的資料夾 / 檔案：

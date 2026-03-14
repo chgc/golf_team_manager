@@ -28,6 +28,10 @@
 - 不實作產品功能
 - 不加入與目前 repo 狀態無關的複雜自動化
 
+## Dependencies
+
+- `phase1-workspace-scaffold` must be completed first
+
 ## Planned Changes
 
 - 預計修改的資料夾 / 檔案：
@@ -77,6 +81,6 @@
 
 ## Review Status
 
-- Status: pending-review
-- Reviewer:
-- Review notes:
+- Status: approved
+- Reviewer: user approval via `proposal LGTM`
+- Review notes: Approved to move into the implementation-ready stage.
