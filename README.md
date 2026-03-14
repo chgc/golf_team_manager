@@ -64,6 +64,7 @@ Examples:
 - `just frontend-build`
 - `just frontend-test`
 - `just backend-test`
+- `just backend-migrate`
 - `just backend-start`
 
 ### Backend workflow
@@ -84,8 +85,10 @@ The current approved plan is tracked under:
 
 ## Next Steps
 
-After the workspace scaffold, the next ready tasks are expected to bootstrap:
+Phase 1 foundation bootstrap is now in place across workspace, frontend, backend, docs, and SQLite migration baseline.
 
-- frontend Angular shell
-- backend Gin server
-- SQLite migration baseline
+The next ready task is:
+
+- `phase1-integration-check`
+
+The backend currently defaults to a local SQLite database at `backend\data\golf_team_manager.sqlite` and runs baseline migrations on startup.

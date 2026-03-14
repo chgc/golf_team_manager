@@ -37,6 +37,7 @@ just frontend-install
 just frontend-build
 just frontend-test
 just backend-test
+just backend-migrate
 just backend-start
 ```
 
@@ -57,6 +58,7 @@ just backend-start
 - Approved task files are implementation-ready only after the approval commit exists
 - Frontend quick-start commands are exposed through the root `justfile`
 - Backend smoke-test and startup commands are exposed through the root `justfile`
+- Backend currently defaults to `backend\data\golf_team_manager.sqlite` and can run migrations with `just backend-migrate`
 
 ## Future Expansion
 
