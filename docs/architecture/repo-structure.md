@@ -18,7 +18,9 @@ This document explains the current repository layout for `golf_team_manager` aft
 │   │   ├── config\
 │   │   ├── db\
 │   │   ├── domain\
-│   │   └── http\
+│   │   ├── http\
+│   │   ├── repository\
+│   │   └── service\
 │   └── migrations\
 ├── docs\
 │   ├── architecture\
@@ -57,6 +59,7 @@ This document explains the current repository layout for `golf_team_manager` aft
 - Gin-based HTTP service
 - SQLite config, connection, and migration baseline
 - Shared domain structs, DTOs, and validation live under `internal\domain\`
+- API foundation layers now include repository, service, and Gin handler packages
 - No ORM usage
 - Must follow Google Go style guidance, `gofmt`, and test requirements
 

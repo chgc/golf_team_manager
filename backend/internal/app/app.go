@@ -33,7 +33,7 @@ func New(cfg config.Config) (*App, error) {
 		database: database,
 		server: &nethttp.Server{
 			Addr:              cfg.HTTP.Address(),
-			Handler:           apihttp.NewRouter(),
+			Handler:           apihttp.NewRouter(database),
 			ReadHeaderTimeout: cfg.HTTP.ReadTimeout,
 		},
 	}, nil
