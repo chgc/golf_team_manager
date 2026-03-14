@@ -30,6 +30,8 @@ This repository currently focuses on planning and Phase 1 bootstrap work.
 4. Approved proposals live under:
    - `docs\plans\v1-mvp\subagent-work-items\approved\`
 5. After a proposal is moved to `approved`, commit that approval state before starting implementation.
+6. After implementation is completed, move the task document into:
+   - `docs\plans\v1-mvp\subagent-work-items\completed\<date>\`
 
 ### Subagent collaboration
 
@@ -46,6 +48,21 @@ This repository currently focuses on planning and Phase 1 bootstrap work.
 - Keep frontend styling in plain CSS.
 - If a grid table UI is needed, `ag-grid community` is an allowed option.
 - Frontend worktrees are expected to share dependencies through the pnpm workflow.
+
+### Quick commands
+
+Use the root `justfile` as the primary quick-start entry point for common repository commands.
+
+Examples:
+
+- `just status`
+- `just worktrees`
+- `just plans`
+- `just approved`
+- `just pending`
+- `just frontend-install`
+- `just frontend-build`
+- `just frontend-test`
 
 ### Backend workflow
 
