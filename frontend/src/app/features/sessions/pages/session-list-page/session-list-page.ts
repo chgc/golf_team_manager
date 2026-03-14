@@ -9,12 +9,14 @@ import { MatSelectModule } from '@angular/material/select';
 
 import { AuthShell } from '../../../../core/auth/auth-shell';
 import { PlayersApi } from '../../../players/data-access/players-api';
+import { ReportsApi } from '../../../reports/data-access/reports-api';
 import { SessionsApi } from '../../data-access/sessions-api';
 import { RegistrationsApi } from '../../../registrations/data-access/registrations-api';
 import {
   PlayerReadDto,
   RegistrationReadDto,
   RegistrationStatus,
+  ReservationSummaryReadDto,
   SessionReadDto,
   SessionStatus,
   SessionWriteDto,
@@ -27,6 +29,8 @@ interface SessionRosterEntry {
   readonly status: RegistrationStatus;
   readonly updatedAt: string;
 }
+
+type ReservationSummaryState = 'hidden' | 'loading' | 'ready' | 'ineligible' | 'empty' | 'error';
 
 @Component({
   imports: [
@@ -46,14 +50,19 @@ export class SessionListPage {
   private readonly authShell = inject(AuthShell);
   private readonly formBuilder = inject(NonNullableFormBuilder);
   private readonly playersApi = inject(PlayersApi);
+  private readonly reportsApi = inject(ReportsApi);
   private readonly registrationsApi = inject(RegistrationsApi);
   private readonly sessionsApi = inject(SessionsApi);
 
   protected readonly activePlayers = signal<PlayerReadDto[]>([]);
+  protected readonly copyFeedbackMessage = signal<string | null>(null);
   protected readonly errorMessage = signal<string | null>(null);
   protected readonly isSaving = signal(false);
   protected readonly allPlayers = signal<PlayerReadDto[]>([]);
   protected readonly registrations = signal<RegistrationReadDto[]>([]);
+  protected readonly reservationSummary = signal<ReservationSummaryReadDto | null>(null);
+  protected readonly reservationSummaryMessage = signal<string | null>(null);
+  protected readonly reservationSummaryState = signal<ReservationSummaryState>('hidden');
   protected readonly selectedSessionId = signal<string | null>(null);
   protected readonly selectedView = signal<'upcoming' | 'history'>('upcoming');
   protected readonly sessions = signal<SessionReadDto[]>([]);
@@ -164,6 +173,7 @@ export class SessionListPage {
   protected startCreateSession() {
     this.selectedSessionId.set(null);
     this.registrations.set([]);
+    this.resetReservationSummary();
     this.sessionForm.reset({
       date: '',
       courseName: '',
@@ -205,6 +215,7 @@ export class SessionListPage {
         this.selectedSessionId.set(session.id);
         this.patchForm(session);
         this.loadRegistrations(session.id);
+        this.loadReservationSummary(session);
       },
       error: (error: unknown) => {
         this.isSaving.set(false);
@@ -234,6 +245,7 @@ export class SessionListPage {
           this.selectedSessionId.set(updatedSession.id);
           this.patchForm(updatedSession);
           this.loadRegistrations(updatedSession.id);
+          this.loadReservationSummary(updatedSession);
         },
         error: (error: unknown) => {
           this.isSaving.set(false);
@@ -344,6 +356,28 @@ export class SessionListPage {
     });
   }
 
+  protected copyReservationSummary() {
+    const summary = this.reservationSummary();
+    if (!summary) {
+      return;
+    }
+
+    const clipboard = globalThis.navigator?.clipboard;
+    if (!clipboard) {
+      this.copyFeedbackMessage.set('Clipboard is unavailable.');
+      return;
+    }
+
+    void clipboard.writeText(summary.summaryText).then(
+      () => {
+        this.copyFeedbackMessage.set('Summary copied.');
+      },
+      () => {
+        this.copyFeedbackMessage.set('Copy failed. Please try again.');
+      },
+    );
+  }
+
   private loadSession(sessionId: string, patchForm: boolean) {
     this.errorMessage.set(null);
     this.sessionsApi.getSession(sessionId).subscribe({
@@ -354,6 +388,7 @@ export class SessionListPage {
           this.patchForm(session);
         }
         this.loadRegistrations(session.id);
+        this.loadReservationSummary(session);
       },
       error: (error: unknown) => {
         this.errorMessage.set(extractErrorMessage(error));
@@ -413,6 +448,7 @@ export class SessionListPage {
         }
 
         this.loadRegistrations(selectedSession.id);
+        this.loadReservationSummary(selectedSession);
       },
       error: (error: unknown) => {
         this.errorMessage.set(extractErrorMessage(error));
@@ -443,6 +479,56 @@ export class SessionListPage {
       return currentSessions.map((item) => item.id === session.id ? session : item);
     });
   }
+
+  private loadReservationSummary(session: SessionReadDto) {
+    this.copyFeedbackMessage.set(null);
+    this.reservationSummary.set(null);
+
+    if (!this.isManager()) {
+      this.reservationSummaryState.set('hidden');
+      this.reservationSummaryMessage.set(null);
+      return;
+    }
+
+    if (!isReservationSummaryEligibleStatus(session.status)) {
+      this.reservationSummaryState.set('ineligible');
+      this.reservationSummaryMessage.set('This session is not ready for a reservation summary yet.');
+      return;
+    }
+
+    this.reservationSummaryState.set('loading');
+    this.reservationSummaryMessage.set(null);
+    this.reportsApi.getReservationSummary(session.id).subscribe({
+      next: (summary) => {
+        this.reservationSummary.set(summary);
+        this.reservationSummaryState.set('ready');
+        this.reservationSummaryMessage.set(null);
+      },
+      error: (error: unknown) => {
+        const errorCode = extractErrorCode(error);
+        switch (errorCode) {
+          case 'reservation_summary_empty':
+            this.reservationSummaryState.set('empty');
+            this.reservationSummaryMessage.set('There are no confirmed players yet, so the reservation summary is unavailable.');
+            return;
+          case 'session_not_eligible_for_report':
+            this.reservationSummaryState.set('ineligible');
+            this.reservationSummaryMessage.set('This session is not ready for a reservation summary yet.');
+            return;
+          default:
+            this.reservationSummaryState.set('error');
+            this.reservationSummaryMessage.set(extractErrorMessage(error));
+        }
+      },
+    });
+  }
+
+  private resetReservationSummary() {
+    this.copyFeedbackMessage.set(null);
+    this.reservationSummary.set(null);
+    this.reservationSummaryMessage.set(null);
+    this.reservationSummaryState.set('hidden');
+  }
 }
 
 function isUpcomingSession(session: SessionReadDto): boolean {
@@ -461,13 +547,25 @@ function toLocalDateTimeInput(value: string): string {
   return value.slice(0, 16);
 }
 
-function extractErrorMessage(error: unknown): string {
+function isReservationSummaryEligibleStatus(status: SessionStatus): boolean {
+  return status === 'confirmed' || status === 'completed';
+}
+
+function extractApiError(error: unknown): { code?: string; message?: string; details?: string[] } | null {
   if (typeof error !== 'object' || error === null) {
-    return 'Unexpected error';
+    return null;
   }
 
   const maybeError = error as { error?: { error?: { message?: string; details?: string[] } } };
-  const apiError = maybeError.error?.error;
+  return maybeError.error?.error ?? null;
+}
+
+function extractErrorCode(error: unknown): string | null {
+  return extractApiError(error)?.code ?? null;
+}
+
+function extractErrorMessage(error: unknown): string {
+  const apiError = extractApiError(error);
   if (!apiError) {
     return 'Unexpected error';
   }

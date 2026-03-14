@@ -4,7 +4,9 @@ import (
 	"database/sql"
 	nethttp "net/http"
 
+	"github.com/chgc/golf_team_manager/backend/internal/auth"
 	"github.com/chgc/golf_team_manager/backend/internal/domain"
+	"github.com/chgc/golf_team_manager/backend/internal/http/middleware"
 	"github.com/chgc/golf_team_manager/backend/internal/repository"
 	"github.com/chgc/golf_team_manager/backend/internal/service"
 	"github.com/gin-gonic/gin"
@@ -12,6 +14,7 @@ import (
 
 type Handlers struct {
 	playerService       *service.PlayerService
+	reportService       *service.ReportService
 	sessionService      *service.SessionService
 	registrationService *service.RegistrationService
 }
@@ -23,6 +26,7 @@ func NewHandlers(database *sql.DB) *Handlers {
 
 	return &Handlers{
 		playerService:       service.NewPlayerService(playerRepository),
+		reportService:       service.NewReportService(playerRepository, sessionRepository, registrationRepository),
 		sessionService:      service.NewSessionService(sessionRepository),
 		registrationService: service.NewRegistrationService(playerRepository, sessionRepository, registrationRepository),
 	}
@@ -178,6 +182,37 @@ func (h *Handlers) UpdateRegistration(c *gin.Context) {
 	}
 
 	c.JSON(nethttp.StatusOK, registration)
+}
+
+func (h *Handlers) GetReservationSummary(c *gin.Context) {
+	principal, ok := middleware.PrincipalFromContext(c)
+	if !ok {
+		c.JSON(nethttp.StatusInternalServerError, ErrorResponse{
+			Error: APIError{
+				Code:    "internal_error",
+				Message: "auth principal is unavailable",
+			},
+		})
+		return
+	}
+
+	if principal.Role != auth.RoleManager {
+		c.JSON(nethttp.StatusForbidden, ErrorResponse{
+			Error: APIError{
+				Code:    "forbidden",
+				Message: "manager access is required",
+			},
+		})
+		return
+	}
+
+	summary, err := h.reportService.GetReservationSummary(c.Request.Context(), c.Param("sessionId"))
+	if err != nil {
+		respondError(c, err)
+		return
+	}
+
+	c.JSON(nethttp.StatusOK, summary)
 }
 
 func (h *Handlers) NotImplemented(c *gin.Context) {

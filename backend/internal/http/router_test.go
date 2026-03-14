@@ -8,6 +8,7 @@ import (
 	nethttp "net/http"
 	"net/http/httptest"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/chgc/golf_team_manager/backend/internal/config"
@@ -663,6 +664,407 @@ func TestRegistrationUpdateAndValidationFlow(t *testing.T) {
 	}
 }
 
+func TestGetReservationSummaryFlow(t *testing.T) {
+	router, cleanup := newTestRouter(t)
+	defer cleanup()
+
+	firstPlayerResponse := performJSONRequest(
+		t,
+		router,
+		nethttp.MethodPost,
+		"/api/players",
+		map[string]any{
+			"name":     "Alice",
+			"handicap": 10,
+			"status":   "active",
+		},
+	)
+	if firstPlayerResponse.Code != nethttp.StatusCreated {
+		t.Fatalf("create first player status = %d, want %d", firstPlayerResponse.Code, nethttp.StatusCreated)
+	}
+
+	var firstPlayer map[string]any
+	decodeResponseBody(t, firstPlayerResponse, &firstPlayer)
+
+	secondPlayerResponse := performJSONRequest(
+		t,
+		router,
+		nethttp.MethodPost,
+		"/api/players",
+		map[string]any{
+			"name":     "Bob",
+			"handicap": 14,
+			"status":   "active",
+		},
+	)
+	if secondPlayerResponse.Code != nethttp.StatusCreated {
+		t.Fatalf("create second player status = %d, want %d", secondPlayerResponse.Code, nethttp.StatusCreated)
+	}
+
+	var secondPlayer map[string]any
+	decodeResponseBody(t, secondPlayerResponse, &secondPlayer)
+
+	sessionResponse := performJSONRequest(
+		t,
+		router,
+		nethttp.MethodPost,
+		"/api/sessions",
+		map[string]any{
+			"date":                 "2026-10-01T08:00:00Z",
+			"courseName":           "Sunrise Golf Club",
+			"courseAddress":        "",
+			"maxPlayers":           8,
+			"registrationDeadline": "2026-09-25T23:59:00Z",
+			"status":               "open",
+		},
+	)
+	if sessionResponse.Code != nethttp.StatusCreated {
+		t.Fatalf("create session status = %d, want %d", sessionResponse.Code, nethttp.StatusCreated)
+	}
+
+	var session map[string]any
+	decodeResponseBody(t, sessionResponse, &session)
+
+	for _, player := range []map[string]any{firstPlayer, secondPlayer} {
+		registrationResponse := performJSONRequest(
+			t,
+			router,
+			nethttp.MethodPost,
+			"/api/sessions/"+session["id"].(string)+"/registrations",
+			map[string]any{
+				"playerId": player["id"],
+				"status":   "confirmed",
+			},
+		)
+		if registrationResponse.Code != nethttp.StatusCreated {
+			t.Fatalf("create registration status = %d, want %d", registrationResponse.Code, nethttp.StatusCreated)
+		}
+	}
+
+	closeResponse := performJSONRequest(
+		t,
+		router,
+		nethttp.MethodPatch,
+		"/api/sessions/"+session["id"].(string),
+		map[string]any{
+			"date":                 "2026-10-01T08:00:00Z",
+			"courseName":           "Sunrise Golf Club",
+			"courseAddress":        "",
+			"maxPlayers":           8,
+			"registrationDeadline": "2026-09-25T23:59:00Z",
+			"status":               "closed",
+		},
+	)
+	if closeResponse.Code != nethttp.StatusOK {
+		t.Fatalf("close session status = %d, want %d", closeResponse.Code, nethttp.StatusOK)
+	}
+
+	confirmResponse := performJSONRequest(
+		t,
+		router,
+		nethttp.MethodPatch,
+		"/api/sessions/"+session["id"].(string),
+		map[string]any{
+			"date":                 "2026-10-01T08:00:00Z",
+			"courseName":           "Sunrise Golf Club",
+			"courseAddress":        "",
+			"maxPlayers":           8,
+			"registrationDeadline": "2026-09-25T23:59:00Z",
+			"status":               "confirmed",
+		},
+	)
+	if confirmResponse.Code != nethttp.StatusOK {
+		t.Fatalf("confirm session status = %d, want %d", confirmResponse.Code, nethttp.StatusOK)
+	}
+
+	summaryResponse := performJSONRequest(
+		t,
+		router,
+		nethttp.MethodGet,
+		"/api/reports/sessions/"+session["id"].(string)+"/reservation-summary",
+		nil,
+	)
+	if summaryResponse.Code != nethttp.StatusOK {
+		t.Fatalf("get reservation summary status = %d, want %d", summaryResponse.Code, nethttp.StatusOK)
+	}
+
+	var summary map[string]any
+	decodeResponseBody(t, summaryResponse, &summary)
+
+	if summary["confirmedPlayerCount"] != float64(2) {
+		t.Fatalf("confirmedPlayerCount = %v, want %v", summary["confirmedPlayerCount"], float64(2))
+	}
+
+	if summary["estimatedGroups"] != float64(1) {
+		t.Fatalf("estimatedGroups = %v, want %v", summary["estimatedGroups"], float64(1))
+	}
+
+	confirmedPlayers, ok := summary["confirmedPlayers"].([]any)
+	if !ok || len(confirmedPlayers) != 2 {
+		t.Fatalf("confirmedPlayers length = %d, want %d", len(confirmedPlayers), 2)
+	}
+
+	firstConfirmedPlayer := confirmedPlayers[0].(map[string]any)
+	secondConfirmedPlayer := confirmedPlayers[1].(map[string]any)
+	if firstConfirmedPlayer["playerName"] != "Alice" || secondConfirmedPlayer["playerName"] != "Bob" {
+		t.Fatalf("confirmedPlayers order = %v, want Alice then Bob", confirmedPlayers)
+	}
+
+	summaryText, ok := summary["summaryText"].(string)
+	if !ok {
+		t.Fatal("summaryText is not a string")
+	}
+
+	for _, expectedLine := range []string{
+		"Course: Sunrise Golf Club",
+		"Address: N/A",
+		"Confirmed Players: 2",
+		"Estimated Groups: 1",
+		"- Alice",
+		"- Bob",
+	} {
+		if !strings.Contains(summaryText, expectedLine) {
+			t.Fatalf("summaryText %q does not contain %q", summaryText, expectedLine)
+		}
+	}
+}
+
+func TestGetReservationSummaryValidationAndAuthorizationFlow(t *testing.T) {
+	router, cleanup := newTestRouter(t)
+	defer cleanup()
+
+	openSessionResponse := performJSONRequest(
+		t,
+		router,
+		nethttp.MethodPost,
+		"/api/sessions",
+		map[string]any{
+			"date":                 "2026-11-10T08:00:00Z",
+			"courseName":           "North Hills",
+			"maxPlayers":           4,
+			"registrationDeadline": "2026-11-01T23:59:00Z",
+			"status":               "open",
+		},
+	)
+	if openSessionResponse.Code != nethttp.StatusCreated {
+		t.Fatalf("create open session status = %d, want %d", openSessionResponse.Code, nethttp.StatusCreated)
+	}
+
+	var openSession map[string]any
+	decodeResponseBody(t, openSessionResponse, &openSession)
+
+	ineligibleResponse := performJSONRequest(
+		t,
+		router,
+		nethttp.MethodGet,
+		"/api/reports/sessions/"+openSession["id"].(string)+"/reservation-summary",
+		nil,
+	)
+	if ineligibleResponse.Code != nethttp.StatusUnprocessableEntity {
+		t.Fatalf("open session summary status = %d, want %d", ineligibleResponse.Code, nethttp.StatusUnprocessableEntity)
+	}
+
+	var ineligibleError ErrorResponse
+	decodeResponseBody(t, ineligibleResponse, &ineligibleError)
+	if ineligibleError.Error.Code != "session_not_eligible_for_report" {
+		t.Fatalf("ineligible error code = %q, want %q", ineligibleError.Error.Code, "session_not_eligible_for_report")
+	}
+
+	emptySessionResponse := performJSONRequest(
+		t,
+		router,
+		nethttp.MethodPost,
+		"/api/sessions",
+		map[string]any{
+			"date":                 "2026-11-20T08:00:00Z",
+			"courseName":           "Ocean View",
+			"maxPlayers":           4,
+			"registrationDeadline": "2026-11-10T23:59:00Z",
+			"status":               "open",
+		},
+	)
+	if emptySessionResponse.Code != nethttp.StatusCreated {
+		t.Fatalf("create empty session status = %d, want %d", emptySessionResponse.Code, nethttp.StatusCreated)
+	}
+
+	var emptySession map[string]any
+	decodeResponseBody(t, emptySessionResponse, &emptySession)
+
+	closeEmptySessionResponse := performJSONRequest(
+		t,
+		router,
+		nethttp.MethodPatch,
+		"/api/sessions/"+emptySession["id"].(string),
+		map[string]any{
+			"date":                 "2026-11-20T08:00:00Z",
+			"courseName":           "Ocean View",
+			"maxPlayers":           4,
+			"registrationDeadline": "2026-11-10T23:59:00Z",
+			"status":               "closed",
+		},
+	)
+	if closeEmptySessionResponse.Code != nethttp.StatusOK {
+		t.Fatalf("close empty session status = %d, want %d", closeEmptySessionResponse.Code, nethttp.StatusOK)
+	}
+
+	confirmEmptySessionResponse := performJSONRequest(
+		t,
+		router,
+		nethttp.MethodPatch,
+		"/api/sessions/"+emptySession["id"].(string),
+		map[string]any{
+			"date":                 "2026-11-20T08:00:00Z",
+			"courseName":           "Ocean View",
+			"maxPlayers":           4,
+			"registrationDeadline": "2026-11-10T23:59:00Z",
+			"status":               "confirmed",
+		},
+	)
+	if confirmEmptySessionResponse.Code != nethttp.StatusOK {
+		t.Fatalf("confirm empty session status = %d, want %d", confirmEmptySessionResponse.Code, nethttp.StatusOK)
+	}
+
+	emptySummaryResponse := performJSONRequest(
+		t,
+		router,
+		nethttp.MethodGet,
+		"/api/reports/sessions/"+emptySession["id"].(string)+"/reservation-summary",
+		nil,
+	)
+	if emptySummaryResponse.Code != nethttp.StatusUnprocessableEntity {
+		t.Fatalf("empty summary status = %d, want %d", emptySummaryResponse.Code, nethttp.StatusUnprocessableEntity)
+	}
+
+	var emptySummaryError ErrorResponse
+	decodeResponseBody(t, emptySummaryResponse, &emptySummaryError)
+	if emptySummaryError.Error.Code != "reservation_summary_empty" {
+		t.Fatalf("empty summary error code = %q, want %q", emptySummaryError.Error.Code, "reservation_summary_empty")
+	}
+
+	notFoundResponse := performJSONRequest(
+		t,
+		router,
+		nethttp.MethodGet,
+		"/api/reports/sessions/missing-session/reservation-summary",
+		nil,
+	)
+	if notFoundResponse.Code != nethttp.StatusNotFound {
+		t.Fatalf("missing session summary status = %d, want %d", notFoundResponse.Code, nethttp.StatusNotFound)
+	}
+
+	var notFoundError ErrorResponse
+	decodeResponseBody(t, notFoundResponse, &notFoundError)
+	if notFoundError.Error.Code != "session_not_found" {
+		t.Fatalf("missing session error code = %q, want %q", notFoundError.Error.Code, "session_not_found")
+	}
+
+	playerResponse := performJSONRequest(
+		t,
+		router,
+		nethttp.MethodPost,
+		"/api/players",
+		map[string]any{
+			"name":     "Charlie",
+			"handicap": 9,
+			"status":   "active",
+		},
+	)
+	if playerResponse.Code != nethttp.StatusCreated {
+		t.Fatalf("create player status = %d, want %d", playerResponse.Code, nethttp.StatusCreated)
+	}
+
+	var player map[string]any
+	decodeResponseBody(t, playerResponse, &player)
+
+	eligibleSessionResponse := performJSONRequest(
+		t,
+		router,
+		nethttp.MethodPost,
+		"/api/sessions",
+		map[string]any{
+			"date":                 "2026-12-01T08:00:00Z",
+			"courseName":           "Evergreen",
+			"maxPlayers":           4,
+			"registrationDeadline": "2026-11-20T23:59:00Z",
+			"status":               "open",
+		},
+	)
+	if eligibleSessionResponse.Code != nethttp.StatusCreated {
+		t.Fatalf("create eligible session status = %d, want %d", eligibleSessionResponse.Code, nethttp.StatusCreated)
+	}
+
+	var eligibleSession map[string]any
+	decodeResponseBody(t, eligibleSessionResponse, &eligibleSession)
+
+	eligibleRegistrationResponse := performJSONRequest(
+		t,
+		router,
+		nethttp.MethodPost,
+		"/api/sessions/"+eligibleSession["id"].(string)+"/registrations",
+		map[string]any{
+			"playerId": player["id"],
+			"status":   "confirmed",
+		},
+	)
+	if eligibleRegistrationResponse.Code != nethttp.StatusCreated {
+		t.Fatalf("create eligible registration status = %d, want %d", eligibleRegistrationResponse.Code, nethttp.StatusCreated)
+	}
+
+	closeEligibleSessionResponse := performJSONRequest(
+		t,
+		router,
+		nethttp.MethodPatch,
+		"/api/sessions/"+eligibleSession["id"].(string),
+		map[string]any{
+			"date":                 "2026-12-01T08:00:00Z",
+			"courseName":           "Evergreen",
+			"maxPlayers":           4,
+			"registrationDeadline": "2026-11-20T23:59:00Z",
+			"status":               "closed",
+		},
+	)
+	if closeEligibleSessionResponse.Code != nethttp.StatusOK {
+		t.Fatalf("close eligible session status = %d, want %d", closeEligibleSessionResponse.Code, nethttp.StatusOK)
+	}
+
+	confirmEligibleSessionResponse := performJSONRequest(
+		t,
+		router,
+		nethttp.MethodPatch,
+		"/api/sessions/"+eligibleSession["id"].(string),
+		map[string]any{
+			"date":                 "2026-12-01T08:00:00Z",
+			"courseName":           "Evergreen",
+			"maxPlayers":           4,
+			"registrationDeadline": "2026-11-20T23:59:00Z",
+			"status":               "confirmed",
+		},
+	)
+	if confirmEligibleSessionResponse.Code != nethttp.StatusOK {
+		t.Fatalf("confirm eligible session status = %d, want %d", confirmEligibleSessionResponse.Code, nethttp.StatusOK)
+	}
+
+	forbiddenResponse := performJSONRequestWithHeaders(
+		t,
+		router,
+		nethttp.MethodGet,
+		"/api/reports/sessions/"+eligibleSession["id"].(string)+"/reservation-summary",
+		nil,
+		map[string]string{
+			"X-Debug-Role": "player",
+		},
+	)
+	if forbiddenResponse.Code != nethttp.StatusForbidden {
+		t.Fatalf("player role summary status = %d, want %d", forbiddenResponse.Code, nethttp.StatusForbidden)
+	}
+
+	var forbiddenError ErrorResponse
+	decodeResponseBody(t, forbiddenResponse, &forbiddenError)
+	if forbiddenError.Error.Code != "forbidden" {
+		t.Fatalf("forbidden error code = %q, want %q", forbiddenError.Error.Code, "forbidden")
+	}
+}
+
 func newTestRouter(t *testing.T) (*gin.Engine, func()) {
 	t.Helper()
 
@@ -704,6 +1106,17 @@ func performJSONRequest(
 	target string,
 	payload any,
 ) *httptest.ResponseRecorder {
+	return performJSONRequestWithHeaders(t, router, method, target, payload, nil)
+}
+
+func performJSONRequestWithHeaders(
+	t *testing.T,
+	router httpHandler,
+	method string,
+	target string,
+	payload any,
+	headers map[string]string,
+) *httptest.ResponseRecorder {
 	t.Helper()
 
 	var body *bytes.Buffer
@@ -720,6 +1133,9 @@ func performJSONRequest(
 
 	request := httptest.NewRequest(method, target, body)
 	request.Header.Set("Content-Type", "application/json")
+	for key, value := range headers {
+		request.Header.Set(key, value)
+	}
 	responseRecorder := httptest.NewRecorder()
 	router.ServeHTTP(responseRecorder, request)
 

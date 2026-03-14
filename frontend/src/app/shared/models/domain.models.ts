@@ -54,3 +54,21 @@ export interface RegistrationReadDto {
   registeredAt: string;
   updatedAt: string;
 }
+
+export interface ReservationSummaryPlayerReadDto {
+  playerId: string;
+  playerName: string;
+}
+
+export interface ReservationSummaryReadDto {
+  sessionId: string;
+  sessionDate: string;
+  courseName: string;
+  courseAddress: string;
+  registrationDeadline: string;
+  sessionStatus: SessionStatus;
+  confirmedPlayerCount: number;
+  estimatedGroups: number;
+  summaryText: string;
+  confirmedPlayers: ReservationSummaryPlayerReadDto[];
+}

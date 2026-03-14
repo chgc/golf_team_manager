@@ -186,6 +186,83 @@
           </mat-card-content>
         </mat-card>
 
+        @if (isManager()) {
+          <mat-card appearance="outlined">
+            <mat-card-header>
+              <mat-card-title>Reservation summary</mat-card-title>
+              <mat-card-subtitle>Manager-only summary for reservation handoff and copy workflow.</mat-card-subtitle>
+            </mat-card-header>
+
+            <mat-card-content class="summary-content">
+              @switch (reservationSummaryState()) {
+                @case ('loading') {
+                  <p class="summary-message" aria-live="polite">Loading reservation summary...</p>
+                }
+                @case ('ineligible') {
+                  <p class="summary-message" aria-live="polite">{{ reservationSummaryMessage() }}</p>
+                }
+                @case ('empty') {
+                  <p class="summary-message" aria-live="polite">{{ reservationSummaryMessage() }}</p>
+                }
+                @case ('error') {
+                  <p class="summary-message summary-error" aria-live="polite">{{ reservationSummaryMessage() }}</p>
+                }
+                @case ('ready') {
+                  @if (reservationSummary(); as reservationSummary) {
+                    <div class="detail-grid">
+                      <div>
+                        <h3>Confirmed players</h3>
+                        <p>{{ reservationSummary.confirmedPlayerCount }}</p>
+                      </div>
+                      <div>
+                        <h3>Estimated groups</h3>
+                        <p>{{ reservationSummary.estimatedGroups }}</p>
+                      </div>
+                      <div>
+                        <h3>Course address</h3>
+                        <p>{{ reservationSummary.courseAddress || 'N/A' }}</p>
+                      </div>
+                      <div>
+                        <h3>Report status</h3>
+                        <p>{{ reservationSummary.sessionStatus }}</p>
+                      </div>
+                    </div>
+
+                    <div class="summary-actions">
+                      <button mat-flat-button color="primary" type="button" (click)="copyReservationSummary()">
+                        Copy summary text
+                      </button>
+                    </div>
+
+                    @if (copyFeedbackMessage(); as copyFeedbackMessage) {
+                      <p class="summary-message" aria-live="polite">{{ copyFeedbackMessage }}</p>
+                    }
+
+                    <section class="summary-block">
+                      <h3>Copy-ready summary</h3>
+                      <pre class="summary-text">{{ reservationSummary.summaryText }}</pre>
+                    </section>
+
+                    <section class="summary-block">
+                      <h3>Confirmed roster</h3>
+                      <div class="registration-list">
+                        @for (player of reservationSummary.confirmedPlayers; track player.playerId) {
+                          <article class="registration-row">
+                            <div>
+                              <h4>{{ player.playerName }}</h4>
+                              <p>{{ player.playerId }}</p>
+                            </div>
+                          </article>
+                        }
+                      </div>
+                    </section>
+                  }
+                }
+              }
+            </mat-card-content>
+          </mat-card>
+        }
+
         <mat-card appearance="outlined">
           <mat-card-header>
             <mat-card-title>Registration roster</mat-card-title>

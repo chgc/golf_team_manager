@@ -1,11 +1,11 @@
 # Golf Team Manager
 
-Golf Team Manager is a greenfield repository for a golf-team management system built with:
+Golf Team Manager is a golf-team management system repository built with:
 
 - frontend: Angular + Angular Material + plain CSS + pnpm
 - backend: Go + Gin + SQLite
 
-This repository currently focuses on the completed Phase 1 foundation baseline and the transition into Phase 2 domain/schema work.
+This repository currently includes the completed v1 foundation baseline plus player, session, registration, and reservation summary reporting flows.
 
 ## Repository Layout
 
@@ -91,8 +91,6 @@ Phase 1 foundation has been validated across:
 - Go backend unit tests
 - SQLite migration bootstrap
 - backend startup and `/health` smoke check
-
-The next approved work item is `reservation-report`.
 
 The next recommended review item is `qa-and-seed-data`.
 

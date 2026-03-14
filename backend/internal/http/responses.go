@@ -39,6 +39,18 @@ func respondError(c *gin.Context, err error) {
 	}
 
 	switch {
+	case errors.Is(err, service.ErrSessionReportNotFound):
+		c.JSON(nethttp.StatusNotFound, ErrorResponse{
+			Error: APIError{Code: "session_not_found", Message: "requested session was not found"},
+		})
+	case errors.Is(err, service.ErrReservationSummaryNotEligible):
+		c.JSON(nethttp.StatusUnprocessableEntity, ErrorResponse{
+			Error: APIError{Code: "session_not_eligible_for_report", Message: "session is not eligible for reservation summary"},
+		})
+	case errors.Is(err, service.ErrReservationSummaryEmpty):
+		c.JSON(nethttp.StatusUnprocessableEntity, ErrorResponse{
+			Error: APIError{Code: "reservation_summary_empty", Message: "reservation summary requires at least one confirmed player"},
+		})
 	case errors.Is(err, repository.ErrNotFound):
 		c.JSON(nethttp.StatusNotFound, ErrorResponse{
 			Error: APIError{Code: "not_found", Message: "requested resource was not found"},

@@ -5,6 +5,7 @@
 
 .view-toggle,
 .form-actions,
+.summary-actions,
 .row-actions {
   display: flex;
   flex-wrap: wrap;
@@ -25,6 +26,8 @@
 .registration-content,
 .manager-registration-form,
 .session-form,
+.summary-content,
+.summary-block,
 .session-list {
   display: grid;
   gap: 16px;
@@ -98,6 +101,23 @@
 .error-card {
   border-color: #b3261e;
   color: #b3261e;
+}
+
+.summary-message {
+  margin: 0;
+}
+
+.summary-error {
+  color: #b3261e;
+}
+
+.summary-text {
+  background: #f7f7f7;
+  border-radius: 12px;
+  margin: 0;
+  overflow-x: auto;
+  padding: 16px;
+  white-space: pre-wrap;
 }
 
 @media (width <= 960px) {
