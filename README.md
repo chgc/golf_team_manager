@@ -63,6 +63,8 @@ Examples:
 - `just frontend-install`
 - `just frontend-build`
 - `just frontend-test`
+- `just backend-test`
+- `just backend-start`
 
 ### Backend workflow
 

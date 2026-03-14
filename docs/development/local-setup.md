@@ -36,6 +36,8 @@ just completed
 just frontend-install
 just frontend-build
 just frontend-test
+just backend-test
+just backend-start
 ```
 
 ### 3. Subagent implementation flow
@@ -54,6 +56,7 @@ just frontend-test
 - Backend implementation uses Go + Gin and no ORM
 - Approved task files are implementation-ready only after the approval commit exists
 - Frontend quick-start commands are exposed through the root `justfile`
+- Backend smoke-test and startup commands are exposed through the root `justfile`
 
 ## Future Expansion
 

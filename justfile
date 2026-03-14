@@ -27,6 +27,12 @@ frontend-dir:
 backend-dir:
     Get-Item backend | Select-Object FullName
 
+backend-start:
+    Set-Location backend; go run ./cmd/api
+
+backend-test:
+    Set-Location backend; go test ./...
+
 frontend-install:
     Set-Location frontend; pnpm.cmd install
 
