@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { RouterLink } from '@angular/router';
@@ -17,7 +17,7 @@ interface ShellSection {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HomePage {
-  protected readonly shellSections: readonly ShellSection[] = [
+  protected readonly shellSections = signal<readonly ShellSection[]>([
     {
       title: 'Players',
       path: '/players',
@@ -28,5 +28,5 @@ export class HomePage {
       path: '/sessions',
       description: 'Align session pages with backend status lifecycle, capacity rules, and reporting flow.',
     },
-  ];
+  ]);
 }

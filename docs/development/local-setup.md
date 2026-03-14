@@ -2,7 +2,7 @@
 
 ## Scope
 
-This document covers the current Phase 1 local-development workflow for repository bootstrap work.
+This document covers the current local-development workflow for the v1 MVP baseline, including seed data and demo smoke preparation.
 
 ## Required Tools
 
@@ -38,6 +38,7 @@ just frontend-build
 just frontend-test
 just backend-test
 just backend-migrate
+just backend-seed
 just backend-start
 ```
 
@@ -63,12 +64,10 @@ Validation results for the completed Phase 1 baseline are tracked in:
 - Frontend quick-start commands are exposed through the root `justfile`
 - Backend smoke-test and startup commands are exposed through the root `justfile`
 - Backend currently defaults to `backend\data\golf_team_manager.sqlite` and can run migrations with `just backend-migrate`
+- Demo seed data can be rebuilt with `just backend-seed`
+- `backend-seed` is local/dev only and currently requires `AUTH_MODE=dev_stub`
+- The current manager/player demo path is documented in `docs\development\demo-smoke-check.md`
 
 ## Future Expansion
 
-This document should be updated after:
-
-- shared domain schema and API contract work
-- Phase 2 feature modules start landing
-
-At that point, the setup guide should expand from bootstrap validation into feature-development workflows.
+This document should continue to evolve as Phase 8+ delivery adds broader release-readiness and operator handoff coverage.

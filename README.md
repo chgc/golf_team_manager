@@ -65,6 +65,7 @@ Examples:
 - `just frontend-test`
 - `just backend-test`
 - `just backend-migrate`
+- `just backend-seed`
 - `just backend-start`
 
 ### Backend workflow
@@ -91,8 +92,6 @@ Phase 1 foundation has been validated across:
 - Go backend unit tests
 - SQLite migration bootstrap
 - backend startup and `/health` smoke check
-
-The next approved work item is `qa-and-seed-data`.
 
 The next recommended review item is `release-readiness`.
 

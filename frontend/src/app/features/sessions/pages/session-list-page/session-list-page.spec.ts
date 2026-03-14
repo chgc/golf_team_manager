@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { of, throwError } from 'rxjs';
+import { of, Subject, throwError } from 'rxjs';
 
 import { AuthShell } from '../../../../core/auth/auth-shell';
 import { PlayersApi } from '../../../players/data-access/players-api';
@@ -112,6 +112,15 @@ describe('SessionListPage', () => {
   it('should create', () => {
     createComponent();
     expect(component).toBeTruthy();
+  });
+
+  it('shows a loading state while the session list request is in flight', () => {
+    const sessionsSubject = new Subject<Array<typeof confirmedSession>>();
+    sessionsApi.listSessions.and.returnValue(sessionsSubject.asObservable());
+
+    createComponent();
+
+    expect(fixture.nativeElement.textContent).toContain('Loading sessions...');
   });
 
   it('loads the reservation summary for confirmed sessions', () => {

@@ -29,6 +29,7 @@ export class PlayerListPage {
   protected readonly players = signal<PlayerReadDto[]>([]);
   protected readonly allPlayers = signal<PlayerReadDto[]>([]);
   protected readonly errorMessage = signal<string | null>(null);
+  protected readonly isLoadingPlayers = signal(false);
   protected readonly isSaving = signal(false);
   protected readonly selectedPlayerId = signal<string | null>(null);
 
@@ -169,11 +170,14 @@ export class PlayerListPage {
 
   private reloadPlayers() {
     const { query, status } = this.filterForm.getRawValue();
+    this.isLoadingPlayers.set(true);
     this.playersApi.listPlayers({ query, status }).subscribe({
       next: (players) => {
+        this.isLoadingPlayers.set(false);
         this.players.set(players);
       },
       error: (error: unknown) => {
+        this.isLoadingPlayers.set(false);
         this.errorMessage.set(extractErrorMessage(error));
       },
     });

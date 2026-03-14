@@ -22,4 +22,11 @@ describe('HomePage', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
+
+  it('renders an empty-safe fallback when no shell sections are configured', () => {
+    (component as any).shellSections.set([]);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('No feature shortcuts are configured yet.');
+  });
 });

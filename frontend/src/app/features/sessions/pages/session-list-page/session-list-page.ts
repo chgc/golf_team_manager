@@ -57,6 +57,7 @@ export class SessionListPage {
   protected readonly activePlayers = signal<PlayerReadDto[]>([]);
   protected readonly copyFeedbackMessage = signal<string | null>(null);
   protected readonly errorMessage = signal<string | null>(null);
+  protected readonly isLoadingSessions = signal(false);
   protected readonly isSaving = signal(false);
   protected readonly allPlayers = signal<PlayerReadDto[]>([]);
   protected readonly registrations = signal<RegistrationReadDto[]>([]);
@@ -432,8 +433,10 @@ export class SessionListPage {
   }
 
   private reloadSessions() {
+    this.isLoadingSessions.set(true);
     this.sessionsApi.listSessions().subscribe({
       next: (sessions) => {
+        this.isLoadingSessions.set(false);
         this.sessions.set(sessions);
 
         const selectedSessionId = this.selectedSessionId();
@@ -451,6 +454,7 @@ export class SessionListPage {
         this.loadReservationSummary(selectedSession);
       },
       error: (error: unknown) => {
+        this.isLoadingSessions.set(false);
         this.errorMessage.set(extractErrorMessage(error));
       },
     });

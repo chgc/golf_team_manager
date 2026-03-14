@@ -36,6 +36,9 @@ backend-test:
 backend-migrate:
     Set-Location backend; go run ./cmd/migrate
 
+backend-seed:
+    Set-Location backend; go run ./cmd/seed
+
 frontend-install:
     Set-Location frontend; pnpm.cmd install
 
