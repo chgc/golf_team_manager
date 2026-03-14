@@ -422,6 +422,247 @@ func TestSessionDetailUpdateStatusAndAutoCloseFlow(t *testing.T) {
 	}
 }
 
+func TestRegistrationUpdateAndValidationFlow(t *testing.T) {
+	router, cleanup := newTestRouter(t)
+	defer cleanup()
+
+	sessionResponse := performJSONRequest(
+		t,
+		router,
+		nethttp.MethodPost,
+		"/api/sessions",
+		map[string]any{
+			"date":                 "2026-08-20T08:00:00Z",
+			"courseName":           "新竹高爾夫俱樂部",
+			"maxPlayers":           1,
+			"registrationDeadline": "2026-08-15T23:59:00Z",
+			"status":               "open",
+		},
+	)
+	if sessionResponse.Code != nethttp.StatusCreated {
+		t.Fatalf("create session status = %d, want %d", sessionResponse.Code, nethttp.StatusCreated)
+	}
+
+	var session map[string]any
+	decodeResponseBody(t, sessionResponse, &session)
+
+	activePlayerResponse := performJSONRequest(
+		t,
+		router,
+		nethttp.MethodPost,
+		"/api/players",
+		map[string]any{
+			"name":     "張小美",
+			"handicap": 10,
+			"status":   "active",
+		},
+	)
+	if activePlayerResponse.Code != nethttp.StatusCreated {
+		t.Fatalf("create active player status = %d, want %d", activePlayerResponse.Code, nethttp.StatusCreated)
+	}
+
+	var activePlayer map[string]any
+	decodeResponseBody(t, activePlayerResponse, &activePlayer)
+
+	registrationResponse := performJSONRequest(
+		t,
+		router,
+		nethttp.MethodPost,
+		"/api/sessions/"+session["id"].(string)+"/registrations",
+		map[string]any{
+			"playerId": activePlayer["id"],
+			"status":   "confirmed",
+		},
+	)
+	if registrationResponse.Code != nethttp.StatusCreated {
+		t.Fatalf("create registration status = %d, want %d", registrationResponse.Code, nethttp.StatusCreated)
+	}
+
+	var registration map[string]any
+	decodeResponseBody(t, registrationResponse, &registration)
+
+	cancelResponse := performJSONRequest(
+		t,
+		router,
+		nethttp.MethodPatch,
+		"/api/registrations/"+registration["id"].(string),
+		map[string]any{
+			"status": "cancelled",
+		},
+	)
+	if cancelResponse.Code != nethttp.StatusOK {
+		t.Fatalf("cancel registration status = %d, want %d", cancelResponse.Code, nethttp.StatusOK)
+	}
+
+	restoreResponse := performJSONRequest(
+		t,
+		router,
+		nethttp.MethodPatch,
+		"/api/registrations/"+registration["id"].(string),
+		map[string]any{
+			"status": "confirmed",
+		},
+	)
+	if restoreResponse.Code != nethttp.StatusOK {
+		t.Fatalf("restore registration status = %d, want %d", restoreResponse.Code, nethttp.StatusOK)
+	}
+
+	duplicateResponse := performJSONRequest(
+		t,
+		router,
+		nethttp.MethodPost,
+		"/api/sessions/"+session["id"].(string)+"/registrations",
+		map[string]any{
+			"playerId": activePlayer["id"],
+			"status":   "confirmed",
+		},
+	)
+	if duplicateResponse.Code != nethttp.StatusConflict {
+		t.Fatalf("duplicate registration status = %d, want %d", duplicateResponse.Code, nethttp.StatusConflict)
+	}
+
+	inactivePlayerResponse := performJSONRequest(
+		t,
+		router,
+		nethttp.MethodPost,
+		"/api/players",
+		map[string]any{
+			"name":     "陳小安",
+			"handicap": 20,
+			"status":   "inactive",
+		},
+	)
+	if inactivePlayerResponse.Code != nethttp.StatusCreated {
+		t.Fatalf("create inactive player status = %d, want %d", inactivePlayerResponse.Code, nethttp.StatusCreated)
+	}
+
+	var inactivePlayer map[string]any
+	decodeResponseBody(t, inactivePlayerResponse, &inactivePlayer)
+
+	inactiveRegistrationResponse := performJSONRequest(
+		t,
+		router,
+		nethttp.MethodPost,
+		"/api/sessions/"+session["id"].(string)+"/registrations",
+		map[string]any{
+			"playerId": inactivePlayer["id"],
+			"status":   "confirmed",
+		},
+	)
+	if inactiveRegistrationResponse.Code != nethttp.StatusConflict {
+		t.Fatalf("inactive player registration status = %d, want %d", inactiveRegistrationResponse.Code, nethttp.StatusConflict)
+	}
+
+	cancelAgainResponse := performJSONRequest(
+		t,
+		router,
+		nethttp.MethodPatch,
+		"/api/registrations/"+registration["id"].(string),
+		map[string]any{
+			"status": "cancelled",
+		},
+	)
+	if cancelAgainResponse.Code != nethttp.StatusOK {
+		t.Fatalf("second cancel registration status = %d, want %d", cancelAgainResponse.Code, nethttp.StatusOK)
+	}
+
+	closeSessionResponse := performJSONRequest(
+		t,
+		router,
+		nethttp.MethodPatch,
+		"/api/sessions/"+session["id"].(string),
+		map[string]any{
+			"date":                 "2026-08-20T08:00:00Z",
+			"courseName":           "新竹高爾夫俱樂部",
+			"maxPlayers":           1,
+			"registrationDeadline": "2026-08-15T23:59:00Z",
+			"status":               "closed",
+		},
+	)
+	if closeSessionResponse.Code != nethttp.StatusOK {
+		t.Fatalf("close session status = %d, want %d", closeSessionResponse.Code, nethttp.StatusOK)
+	}
+
+	restoreClosedResponse := performJSONRequest(
+		t,
+		router,
+		nethttp.MethodPatch,
+		"/api/registrations/"+registration["id"].(string),
+		map[string]any{
+			"status": "confirmed",
+		},
+	)
+	if restoreClosedResponse.Code != nethttp.StatusConflict {
+		t.Fatalf("restore closed session registration status = %d, want %d", restoreClosedResponse.Code, nethttp.StatusConflict)
+	}
+
+	fullSessionResponse := performJSONRequest(
+		t,
+		router,
+		nethttp.MethodPost,
+		"/api/sessions",
+		map[string]any{
+			"date":                 "2026-09-01T08:00:00Z",
+			"courseName":           "桃園高爾夫球場",
+			"maxPlayers":           1,
+			"registrationDeadline": "2026-08-25T23:59:00Z",
+			"status":               "open",
+		},
+	)
+	if fullSessionResponse.Code != nethttp.StatusCreated {
+		t.Fatalf("create full session status = %d, want %d", fullSessionResponse.Code, nethttp.StatusCreated)
+	}
+
+	var fullSession map[string]any
+	decodeResponseBody(t, fullSessionResponse, &fullSession)
+
+	firstFullResponse := performJSONRequest(
+		t,
+		router,
+		nethttp.MethodPost,
+		"/api/sessions/"+fullSession["id"].(string)+"/registrations",
+		map[string]any{
+			"playerId": activePlayer["id"],
+			"status":   "confirmed",
+		},
+	)
+	if firstFullResponse.Code != nethttp.StatusCreated {
+		t.Fatalf("first full-session registration status = %d, want %d", firstFullResponse.Code, nethttp.StatusCreated)
+	}
+
+	anotherPlayerResponse := performJSONRequest(
+		t,
+		router,
+		nethttp.MethodPost,
+		"/api/players",
+		map[string]any{
+			"name":     "林小綠",
+			"handicap": 14,
+			"status":   "active",
+		},
+	)
+	if anotherPlayerResponse.Code != nethttp.StatusCreated {
+		t.Fatalf("create another player status = %d, want %d", anotherPlayerResponse.Code, nethttp.StatusCreated)
+	}
+
+	var anotherPlayer map[string]any
+	decodeResponseBody(t, anotherPlayerResponse, &anotherPlayer)
+
+	capacityFullResponse := performJSONRequest(
+		t,
+		router,
+		nethttp.MethodPost,
+		"/api/sessions/"+fullSession["id"].(string)+"/registrations",
+		map[string]any{
+			"playerId": anotherPlayer["id"],
+			"status":   "confirmed",
+		},
+	)
+	if capacityFullResponse.Code != nethttp.StatusConflict {
+		t.Fatalf("capacity full registration status = %d, want %d", capacityFullResponse.Code, nethttp.StatusConflict)
+	}
+}
+
 func newTestRouter(t *testing.T) (*gin.Engine, func()) {
 	t.Helper()
 

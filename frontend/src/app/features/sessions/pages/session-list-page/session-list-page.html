@@ -185,6 +185,94 @@
             </div>
           </mat-card-content>
         </mat-card>
+
+        <mat-card appearance="outlined">
+          <mat-card-header>
+            <mat-card-title>Registration roster</mat-card-title>
+            <mat-card-subtitle>
+              Confirmed {{ confirmedRegistrationCount() }} / {{ selectedSession.maxPlayers }} players
+            </mat-card-subtitle>
+          </mat-card-header>
+
+          <mat-card-content class="registration-content">
+            @if (currentPlayerId(); as currentPlayerId) {
+              <section class="registration-panel">
+                <h3>My registration</h3>
+                @if (currentPlayerRegistration(); as currentRegistration) {
+                  <p>
+                    Your current status is <strong>{{ currentRegistration.status }}</strong>.
+                  </p>
+                  @if (currentRegistration.status === 'confirmed') {
+                    <button mat-button type="button" (click)="leaveCurrentPlayerRegistration()">
+                      Cancel / Take leave
+                    </button>
+                  } @else {
+                    <button mat-flat-button color="primary" type="button" (click)="registerCurrentPlayer()">
+                      Register again
+                    </button>
+                  }
+                } @else {
+                  <p>You do not have a registration for this session yet.</p>
+                  <button mat-flat-button color="primary" type="button" (click)="registerCurrentPlayer()">
+                    Register for this session
+                  </button>
+                }
+              </section>
+            }
+
+            @if (isManager()) {
+              <section class="registration-panel">
+                <h3>Manager add player</h3>
+                <form [formGroup]="managerRegistrationForm" class="manager-registration-form" (ngSubmit)="submitManagerRegistration()">
+                  <mat-form-field appearance="outline">
+                    <mat-label>Player</mat-label>
+                    <mat-select formControlName="playerId">
+                      @for (player of availableManagerPlayers(); track player.id) {
+                        <mat-option [value]="player.id">{{ player.name }}</mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
+
+                  <div class="form-actions">
+                    <button mat-flat-button color="primary" type="submit">Add registration</button>
+                  </div>
+                </form>
+              </section>
+            }
+
+            <section class="registration-panel">
+              <h3>Roster</h3>
+              @if (rosterEntries().length === 0) {
+                <p>No registrations yet.</p>
+              } @else {
+                <div class="registration-list">
+                  @for (entry of rosterEntries(); track entry.id) {
+                    <article class="registration-row">
+                      <div>
+                        <h4>{{ entry.playerName }}</h4>
+                        <p>Status {{ entry.status }} · Updated {{ entry.updatedAt | date: 'short' }}</p>
+                      </div>
+
+                      @if (isManager()) {
+                        <div class="row-actions">
+                          @if (entry.status === 'confirmed') {
+                            <button mat-button type="button" (click)="updateRegistrationStatus(entry.id, 'cancelled')">
+                              Cancel / Leave
+                            </button>
+                          } @else {
+                            <button mat-button type="button" (click)="updateRegistrationStatus(entry.id, 'confirmed')">
+                              Restore
+                            </button>
+                          }
+                        </div>
+                      }
+                    </article>
+                  }
+                </div>
+              }
+            </section>
+          </mat-card-content>
+        </mat-card>
       }
     </div>
   </div>

@@ -30,6 +30,5 @@ export class App {
     { label: 'Home', path: '/' },
     { label: 'Players', path: '/players' },
     { label: 'Sessions', path: '/sessions' },
-    { label: 'Registrations', path: '/registrations' },
   ];
 }

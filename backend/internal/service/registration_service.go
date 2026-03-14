@@ -94,6 +94,73 @@ func (s *RegistrationService) ListBySession(
 	return results, nil
 }
 
+func (s *RegistrationService) UpdateStatus(
+	ctx context.Context,
+	registrationID string,
+	input domain.RegistrationStatusUpdateDTO,
+) (domain.RegistrationReadDTO, error) {
+	if err := domain.ValidateRegistrationStatusUpdateDTO(input); err != nil {
+		return domain.RegistrationReadDTO{}, err
+	}
+
+	registration, err := s.registrationRepository.GetByID(ctx, registrationID)
+	if err != nil {
+		return domain.RegistrationReadDTO{}, err
+	}
+
+	if registration.Status == input.Status {
+		return mapRegistration(registration), nil
+	}
+
+	switch {
+	case registration.Status == domain.RegistrationStatusConfirmed && input.Status == domain.RegistrationStatusCancelled:
+		updatedRegistration, err := s.registrationRepository.UpdateStatus(ctx, registrationID, input.Status)
+		if err != nil {
+			return domain.RegistrationReadDTO{}, err
+		}
+
+		return mapRegistration(updatedRegistration), nil
+	case registration.Status == domain.RegistrationStatusCancelled && input.Status == domain.RegistrationStatusConfirmed:
+		player, err := s.playerRepository.GetByID(ctx, registration.PlayerID)
+		if err != nil {
+			return domain.RegistrationReadDTO{}, err
+		}
+
+		if player.Status != domain.PlayerStatusActive {
+			return domain.RegistrationReadDTO{}, ErrPlayerInactive
+		}
+
+		session, err := s.sessionRepository.GetByID(ctx, registration.SessionID)
+		if err != nil {
+			return domain.RegistrationReadDTO{}, err
+		}
+
+		if session.Status != domain.SessionStatusOpen {
+			return domain.RegistrationReadDTO{}, ErrSessionNotOpen
+		}
+
+		confirmedCount, err := s.registrationRepository.CountConfirmedBySession(ctx, registration.SessionID)
+		if err != nil {
+			return domain.RegistrationReadDTO{}, err
+		}
+
+		if confirmedCount >= session.MaxPlayers {
+			return domain.RegistrationReadDTO{}, ErrSessionCapacityFull
+		}
+
+		updatedRegistration, err := s.registrationRepository.UpdateStatus(ctx, registrationID, input.Status)
+		if err != nil {
+			return domain.RegistrationReadDTO{}, err
+		}
+
+		return mapRegistration(updatedRegistration), nil
+	default:
+		return domain.RegistrationReadDTO{}, domain.ValidationErrors{
+			errors.New("invalid registration status transition"),
+		}
+	}
+}
+
 func mapRegistration(registration domain.Registration) domain.RegistrationReadDTO {
 	return domain.RegistrationReadDTO{
 		ID:           registration.ID,

@@ -24,14 +24,6 @@ export const routes: Routes = [
     title: 'Sessions | Golf Team Manager',
   },
   {
-    path: 'registrations',
-    loadComponent: () =>
-      import('./features/registrations/pages/registration-list-page/registration-list-page').then(
-        (module) => module.RegistrationListPage,
-      ),
-    title: 'Registrations | Golf Team Manager',
-  },
-  {
     path: '**',
     redirectTo: '',
   },

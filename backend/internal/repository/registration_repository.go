@@ -15,7 +15,9 @@ import (
 type RegistrationRepository interface {
 	CountConfirmedBySession(ctx context.Context, sessionID string) (int, error)
 	Create(ctx context.Context, input domain.RegistrationWriteDTO) (domain.Registration, error)
+	GetByID(ctx context.Context, registrationID string) (domain.Registration, error)
 	ListBySession(ctx context.Context, sessionID string) ([]domain.Registration, error)
+	UpdateStatus(ctx context.Context, registrationID string, status domain.RegistrationStatus) (domain.Registration, error)
 }
 
 type SQLiteRegistrationRepository struct {
@@ -102,6 +104,58 @@ func (r *SQLiteRegistrationRepository) ListBySession(ctx context.Context, sessio
 	}
 
 	return registrations, nil
+}
+
+func (r *SQLiteRegistrationRepository) GetByID(ctx context.Context, registrationID string) (domain.Registration, error) {
+	row := r.database.QueryRowContext(
+		ctx,
+		`SELECT id, player_id, session_id, status, registered_at, updated_at
+		FROM registrations
+		WHERE id = ?`,
+		registrationID,
+	)
+
+	registration, err := scanRegistration(row)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return domain.Registration{}, ErrNotFound
+		}
+
+		return domain.Registration{}, fmt.Errorf("select registration by id: %w", err)
+	}
+
+	return registration, nil
+}
+
+func (r *SQLiteRegistrationRepository) UpdateStatus(
+	ctx context.Context,
+	registrationID string,
+	status domain.RegistrationStatus,
+) (domain.Registration, error) {
+	now := time.Now().UTC()
+	result, err := r.database.ExecContext(
+		ctx,
+		`UPDATE registrations
+		SET status = ?, updated_at = ?
+		WHERE id = ?`,
+		status,
+		formatTimestamp(now),
+		registrationID,
+	)
+	if err != nil {
+		return domain.Registration{}, fmt.Errorf("update registration status: %w", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return domain.Registration{}, fmt.Errorf("rows affected for registration update: %w", err)
+	}
+
+	if rowsAffected == 0 {
+		return domain.Registration{}, ErrNotFound
+	}
+
+	return r.GetByID(ctx, registrationID)
 }
 
 func isSQLiteConstraintError(err error) bool {

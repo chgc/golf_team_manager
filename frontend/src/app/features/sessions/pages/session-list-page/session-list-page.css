@@ -22,6 +22,8 @@
 }
 
 .detail-column,
+.registration-content,
+.manager-registration-form,
 .session-form,
 .session-list {
   display: grid;
@@ -57,6 +59,35 @@
 
 .detail-span {
   grid-column: 1 / -1;
+}
+
+.registration-panel {
+  border-top: 1px solid #e0e0e0;
+  padding-top: 16px;
+}
+
+.registration-panel:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.registration-row {
+  align-items: flex-start;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  padding: 12px 16px;
+}
+
+.registration-row h4 {
+  font-size: 1rem;
+  margin: 0 0 4px;
+}
+
+.registration-row p {
+  margin: 0;
 }
 
 .cancelled-status {

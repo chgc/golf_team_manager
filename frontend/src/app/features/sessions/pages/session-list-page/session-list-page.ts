@@ -7,9 +7,26 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 
+import { AuthShell } from '../../../../core/auth/auth-shell';
+import { PlayersApi } from '../../../players/data-access/players-api';
 import { SessionsApi } from '../../data-access/sessions-api';
 import { RegistrationsApi } from '../../../registrations/data-access/registrations-api';
-import { SessionReadDto, SessionStatus, SessionWriteDto, RegistrationReadDto } from '../../../../shared/models/domain.models';
+import {
+  PlayerReadDto,
+  RegistrationReadDto,
+  RegistrationStatus,
+  SessionReadDto,
+  SessionStatus,
+  SessionWriteDto,
+} from '../../../../shared/models/domain.models';
+
+interface SessionRosterEntry {
+  readonly id: string;
+  readonly playerId: string;
+  readonly playerName: string;
+  readonly status: RegistrationStatus;
+  readonly updatedAt: string;
+}
 
 @Component({
   imports: [
@@ -26,12 +43,16 @@ import { SessionReadDto, SessionStatus, SessionWriteDto, RegistrationReadDto } f
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SessionListPage {
+  private readonly authShell = inject(AuthShell);
   private readonly formBuilder = inject(NonNullableFormBuilder);
+  private readonly playersApi = inject(PlayersApi);
   private readonly registrationsApi = inject(RegistrationsApi);
   private readonly sessionsApi = inject(SessionsApi);
 
+  protected readonly activePlayers = signal<PlayerReadDto[]>([]);
   protected readonly errorMessage = signal<string | null>(null);
   protected readonly isSaving = signal(false);
+  protected readonly allPlayers = signal<PlayerReadDto[]>([]);
   protected readonly registrations = signal<RegistrationReadDto[]>([]);
   protected readonly selectedSessionId = signal<string | null>(null);
   protected readonly selectedView = signal<'upcoming' | 'history'>('upcoming');
@@ -46,6 +67,13 @@ export class SessionListPage {
     status: 'open' as SessionStatus,
     notes: '',
   });
+  protected readonly managerRegistrationForm = this.formBuilder.group({
+    playerId: ['', [Validators.required]],
+  });
+
+  protected readonly authPrincipal = this.authShell.principal;
+  protected readonly isManager = computed(() => this.authPrincipal().role === 'manager');
+  protected readonly currentPlayerId = computed(() => this.authPrincipal().playerId ?? null);
 
   protected readonly selectedSession = computed(() => {
     const selectedId = this.selectedSessionId();
@@ -98,7 +126,34 @@ export class SessionListPage {
     return Math.ceil(confirmedCount / 4);
   });
 
+  protected readonly rosterEntries = computed<readonly SessionRosterEntry[]>(() => {
+    const playersById = new Map(this.allPlayers().map((player) => [player.id, player] as const));
+
+    return this.registrations().map((registration) => ({
+      id: registration.id,
+      playerId: registration.playerId,
+      playerName: playersById.get(registration.playerId)?.name ?? registration.playerId,
+      status: registration.status,
+      updatedAt: registration.updatedAt,
+    }));
+  });
+
+  protected readonly currentPlayerRegistration = computed(() => {
+    const currentPlayerId = this.currentPlayerId();
+    if (!currentPlayerId) {
+      return null;
+    }
+
+    return this.registrations().find((registration) => registration.playerId === currentPlayerId) ?? null;
+  });
+
+  protected readonly availableManagerPlayers = computed(() => {
+    const registeredPlayerIds = new Set(this.registrations().map((registration) => registration.playerId));
+    return this.activePlayers().filter((player) => !registeredPlayerIds.has(player.id));
+  });
+
   constructor() {
+    this.loadPlayers();
     this.reloadSessions();
   }
 
@@ -187,6 +242,108 @@ export class SessionListPage {
       });
   }
 
+  protected registerCurrentPlayer() {
+    const selectedSession = this.selectedSession();
+    const currentPlayerId = this.currentPlayerId();
+    if (!selectedSession || !currentPlayerId) {
+      return;
+    }
+
+    this.isSaving.set(true);
+    this.errorMessage.set(null);
+
+    const existingRegistration = this.currentPlayerRegistration();
+    const request$ = existingRegistration
+      ? this.registrationsApi.updateRegistration(existingRegistration.id, { status: 'confirmed' })
+      : this.registrationsApi.createRegistration(selectedSession.id, {
+          playerId: currentPlayerId,
+          status: 'confirmed',
+        });
+
+    request$.subscribe({
+      next: () => {
+        this.isSaving.set(false);
+        this.loadRegistrations(selectedSession.id);
+      },
+      error: (error: unknown) => {
+        this.isSaving.set(false);
+        this.errorMessage.set(extractErrorMessage(error));
+      },
+    });
+  }
+
+  protected leaveCurrentPlayerRegistration() {
+    const selectedSession = this.selectedSession();
+    const currentRegistration = this.currentPlayerRegistration();
+    if (!selectedSession || !currentRegistration) {
+      return;
+    }
+
+    this.isSaving.set(true);
+    this.errorMessage.set(null);
+    this.registrationsApi.updateRegistration(currentRegistration.id, { status: 'cancelled' }).subscribe({
+      next: () => {
+        this.isSaving.set(false);
+        this.loadRegistrations(selectedSession.id);
+      },
+      error: (error: unknown) => {
+        this.isSaving.set(false);
+        this.errorMessage.set(extractErrorMessage(error));
+      },
+    });
+  }
+
+  protected submitManagerRegistration() {
+    const selectedSession = this.selectedSession();
+    if (!selectedSession) {
+      return;
+    }
+
+    if (this.managerRegistrationForm.invalid) {
+      this.managerRegistrationForm.markAllAsTouched();
+      return;
+    }
+
+    this.isSaving.set(true);
+    this.errorMessage.set(null);
+    this.registrationsApi
+      .createRegistration(selectedSession.id, {
+        playerId: this.managerRegistrationForm.controls.playerId.value,
+        status: 'confirmed',
+      })
+      .subscribe({
+        next: () => {
+          this.isSaving.set(false);
+          this.managerRegistrationForm.reset({ playerId: '' });
+          this.loadRegistrations(selectedSession.id);
+        },
+        error: (error: unknown) => {
+          this.isSaving.set(false);
+          this.errorMessage.set(extractErrorMessage(error));
+        },
+      });
+  }
+
+  protected updateRegistrationStatus(registrationId: string, status: RegistrationStatus) {
+    const selectedSession = this.selectedSession();
+    if (!selectedSession) {
+      return;
+    }
+
+    this.isSaving.set(true);
+    this.errorMessage.set(null);
+    this.registrationsApi.updateRegistration(registrationId, { status }).subscribe({
+      next: () => {
+        this.isSaving.set(false);
+        this.loadRegistrations(selectedSession.id);
+      },
+      error: (error: unknown) => {
+        this.isSaving.set(false);
+        this.errorMessage.set(extractErrorMessage(error));
+      },
+    });
+  }
+
   private loadSession(sessionId: string, patchForm: boolean) {
     this.errorMessage.set(null);
     this.sessionsApi.getSession(sessionId).subscribe({
@@ -197,6 +354,18 @@ export class SessionListPage {
           this.patchForm(session);
         }
         this.loadRegistrations(session.id);
+      },
+      error: (error: unknown) => {
+        this.errorMessage.set(extractErrorMessage(error));
+      },
+    });
+  }
+
+  private loadPlayers() {
+    this.playersApi.listPlayers().subscribe({
+      next: (players) => {
+        this.allPlayers.set(players);
+        this.activePlayers.set(players.filter((player) => player.status === 'active'));
       },
       error: (error: unknown) => {
         this.errorMessage.set(extractErrorMessage(error));

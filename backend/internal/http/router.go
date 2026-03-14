@@ -29,6 +29,7 @@ func NewRouter(database *sql.DB, cfg config.Config) *gin.Engine {
 	apiGroup.PATCH("/sessions/:sessionId", apiHandlers.UpdateSession)
 	apiGroup.GET("/sessions/:sessionId/registrations", apiHandlers.ListRegistrationsBySession)
 	apiGroup.POST("/sessions/:sessionId/registrations", apiHandlers.CreateRegistration)
+	apiGroup.PATCH("/registrations/:registrationId", apiHandlers.UpdateRegistration)
 	apiGroup.GET("/reports/sessions/:sessionId/reservation-summary", apiHandlers.NotImplemented)
 
 	return router

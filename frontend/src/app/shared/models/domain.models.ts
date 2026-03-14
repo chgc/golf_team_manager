@@ -42,6 +42,10 @@ export interface RegistrationWriteDto {
   status: RegistrationStatus;
 }
 
+export interface RegistrationStatusUpdateDto {
+  status: RegistrationStatus;
+}
+
 export interface RegistrationReadDto {
   id: string;
   playerId: string;

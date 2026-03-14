@@ -24,6 +24,10 @@ type RegistrationWriteDTO struct {
 	Status    RegistrationStatus `json:"status"`
 }
 
+type RegistrationStatusUpdateDTO struct {
+	Status RegistrationStatus `json:"status"`
+}
+
 type RegistrationReadDTO struct {
 	ID           string             `json:"id"`
 	PlayerID     string             `json:"playerId"`

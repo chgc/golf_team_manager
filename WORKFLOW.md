@@ -136,9 +136,9 @@ just backend-start
 
 ## 目前狀態
 
-- Phase 1 foundation、Phase 2 shared domain / backend / frontend foundations、Phase 3 auth foundation、Phase 4 players-feature、Phase 5 sessions-feature 已完成
-- 目前正在依相同流程往 Phase 6+ 推進
-- 下一個待 review proposal 為 `registrations-feature`
+- Phase 1 foundation、Phase 2 shared domain / backend / frontend foundations、Phase 3 auth foundation、Phase 4 players-feature、Phase 5 sessions-feature、Phase 6 registrations-feature 已完成
+- 目前正在依相同流程往 Phase 7+ 推進
+- 下一個待 review proposal 為 `reservation-report`
 - backend 預設使用本機 SQLite：
   - `backend\data\golf_team_manager.sqlite`
 

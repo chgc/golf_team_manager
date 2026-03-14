@@ -28,10 +28,5 @@ export class HomePage {
       path: '/sessions',
       description: 'Align session pages with backend status lifecycle, capacity rules, and reporting flow.',
     },
-    {
-      title: 'Registrations',
-      path: '/registrations',
-      description: 'Reserve a clear place for registration flows and manager-side adjustments.',
-    },
   ];
 }

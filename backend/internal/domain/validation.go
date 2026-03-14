@@ -103,6 +103,16 @@ func ValidateRegistrationWriteDTO(input RegistrationWriteDTO) error {
 	return validationErrors.AsError()
 }
 
+func ValidateRegistrationStatusUpdateDTO(input RegistrationStatusUpdateDTO) error {
+	var validationErrors ValidationErrors
+
+	if !isValidRegistrationStatus(input.Status) {
+		validationErrors = append(validationErrors, fmt.Errorf("invalid registration status %q", input.Status))
+	}
+
+	return validationErrors.AsError()
+}
+
 func isHalfStep(value float64) bool {
 	doubled := value * 2
 	return doubled == float64(int(doubled))

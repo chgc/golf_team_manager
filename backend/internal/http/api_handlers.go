@@ -164,6 +164,22 @@ func (h *Handlers) ListRegistrationsBySession(c *gin.Context) {
 	c.JSON(nethttp.StatusOK, registrations)
 }
 
+func (h *Handlers) UpdateRegistration(c *gin.Context) {
+	var input domain.RegistrationStatusUpdateDTO
+	if err := c.ShouldBindJSON(&input); err != nil {
+		respondError(c, domain.ValidationErrors{err})
+		return
+	}
+
+	registration, err := h.registrationService.UpdateStatus(c.Request.Context(), c.Param("registrationId"), input)
+	if err != nil {
+		respondError(c, err)
+		return
+	}
+
+	c.JSON(nethttp.StatusOK, registration)
+}
+
 func (h *Handlers) NotImplemented(c *gin.Context) {
 	c.JSON(nethttp.StatusNotImplemented, ErrorResponse{
 		Error: APIError{
