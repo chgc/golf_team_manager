@@ -94,6 +94,16 @@ func (h *Handlers) ListSessions(c *gin.Context) {
 	c.JSON(nethttp.StatusOK, sessions)
 }
 
+func (h *Handlers) GetSessionByID(c *gin.Context) {
+	session, err := h.sessionService.GetByID(c.Request.Context(), c.Param("sessionId"))
+	if err != nil {
+		respondError(c, err)
+		return
+	}
+
+	c.JSON(nethttp.StatusOK, session)
+}
+
 func (h *Handlers) UpdatePlayer(c *gin.Context) {
 	var input domain.PlayerWriteDTO
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -108,6 +118,22 @@ func (h *Handlers) UpdatePlayer(c *gin.Context) {
 	}
 
 	c.JSON(nethttp.StatusOK, player)
+}
+
+func (h *Handlers) UpdateSession(c *gin.Context) {
+	var input domain.SessionWriteDTO
+	if err := c.ShouldBindJSON(&input); err != nil {
+		respondError(c, domain.ValidationErrors{err})
+		return
+	}
+
+	session, err := h.sessionService.Update(c.Request.Context(), c.Param("sessionId"), input)
+	if err != nil {
+		respondError(c, err)
+		return
+	}
+
+	c.JSON(nethttp.StatusOK, session)
 }
 
 func (h *Handlers) CreateRegistration(c *gin.Context) {

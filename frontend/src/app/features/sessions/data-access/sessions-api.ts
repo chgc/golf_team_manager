@@ -17,4 +17,12 @@ export class SessionsApi {
   createSession(payload: SessionWriteDto) {
     return this.http.post<SessionReadDto>(this.resourcePath, payload);
   }
+
+  getSession(sessionId: string) {
+    return this.http.get<SessionReadDto>(`${this.resourcePath}/${sessionId}`);
+  }
+
+  updateSession(sessionId: string, payload: SessionWriteDto) {
+    return this.http.patch<SessionReadDto>(`${this.resourcePath}/${sessionId}`, payload);
+  }
 }

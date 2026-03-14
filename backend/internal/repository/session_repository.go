@@ -15,6 +15,7 @@ type SessionRepository interface {
 	Create(ctx context.Context, input domain.SessionWriteDTO) (domain.Session, error)
 	GetByID(ctx context.Context, sessionID string) (domain.Session, error)
 	List(ctx context.Context) ([]domain.Session, error)
+	Update(ctx context.Context, sessionID string, input domain.SessionWriteDTO) (domain.Session, error)
 }
 
 type SQLiteSessionRepository struct {
@@ -110,4 +111,41 @@ func (r *SQLiteSessionRepository) List(ctx context.Context) ([]domain.Session, e
 	}
 
 	return sessions, nil
+}
+
+func (r *SQLiteSessionRepository) Update(
+	ctx context.Context,
+	sessionID string,
+	input domain.SessionWriteDTO,
+) (domain.Session, error) {
+	now := time.Now().UTC()
+	result, err := r.database.ExecContext(
+		ctx,
+		`UPDATE sessions
+		SET session_date = ?, course_name = ?, course_address = ?, max_players = ?, registration_deadline = ?, status = ?, notes = ?, updated_at = ?
+		WHERE id = ?`,
+		formatTimestamp(input.Date.UTC()),
+		input.CourseName,
+		input.CourseAddress,
+		input.MaxPlayers,
+		formatTimestamp(input.RegistrationDeadline.UTC()),
+		input.Status,
+		input.Notes,
+		formatTimestamp(now),
+		sessionID,
+	)
+	if err != nil {
+		return domain.Session{}, fmt.Errorf("update session: %w", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return domain.Session{}, fmt.Errorf("rows affected for session update: %w", err)
+	}
+
+	if rowsAffected == 0 {
+		return domain.Session{}, ErrNotFound
+	}
+
+	return r.GetByID(ctx, sessionID)
 }

@@ -1,18 +1,77 @@
 .feature-page {
-  max-width: 960px;
+  display: grid;
+  gap: 24px;
 }
 
-.focus-item + .focus-item {
-  border-top: 1px solid #e0e0e0;
-  margin-top: 16px;
-  padding-top: 16px;
+.view-toggle,
+.form-actions,
+.row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
-.focus-item h2 {
+.active-view {
+  font-weight: 700;
+}
+
+.session-grid {
+  display: grid;
+  gap: 24px;
+  grid-template-columns: 1.2fr 1fr;
+}
+
+.detail-column,
+.session-form,
+.session-list {
+  display: grid;
+  gap: 16px;
+}
+
+.session-row {
+  align-items: flex-start;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  padding: 16px;
+}
+
+.session-row h2,
+.detail-grid h3 {
   font-size: 1rem;
   margin: 0 0 8px;
 }
 
-.focus-item p {
-  margin: 0;
+.session-row p,
+.detail-grid p {
+  margin: 0 0 4px;
+}
+
+.detail-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.detail-span {
+  grid-column: 1 / -1;
+}
+
+.cancelled-status {
+  color: #b3261e;
+  font-weight: 600;
+}
+
+.error-card {
+  border-color: #b3261e;
+  color: #b3261e;
+}
+
+@media (width <= 960px) {
+  .session-grid,
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
 }

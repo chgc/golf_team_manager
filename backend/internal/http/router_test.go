@@ -253,6 +253,175 @@ func TestPlayerDetailUpdateAndFilteringFlow(t *testing.T) {
 	}
 }
 
+func TestSessionDetailUpdateStatusAndAutoCloseFlow(t *testing.T) {
+	router, cleanup := newTestRouter(t)
+	defer cleanup()
+
+	expiringSessionResponse := performJSONRequest(
+		t,
+		router,
+		nethttp.MethodPost,
+		"/api/sessions",
+		map[string]any{
+			"date":                 "2026-06-01T08:00:00Z",
+			"courseName":           "林口高爾夫球場",
+			"maxPlayers":           8,
+			"registrationDeadline": "2025-01-01T00:00:00Z",
+			"status":               "open",
+		},
+	)
+	if expiringSessionResponse.Code != nethttp.StatusCreated {
+		t.Fatalf("create expiring session status = %d, want %d", expiringSessionResponse.Code, nethttp.StatusCreated)
+	}
+
+	var expiringSession map[string]any
+	decodeResponseBody(t, expiringSessionResponse, &expiringSession)
+
+	detailResponse := performJSONRequest(
+		t,
+		router,
+		nethttp.MethodGet,
+		"/api/sessions/"+expiringSession["id"].(string),
+		nil,
+	)
+	if detailResponse.Code != nethttp.StatusOK {
+		t.Fatalf("get session status = %d, want %d", detailResponse.Code, nethttp.StatusOK)
+	}
+
+	var detailSession map[string]any
+	decodeResponseBody(t, detailResponse, &detailSession)
+	if detailSession["status"] != "closed" {
+		t.Fatalf("auto-closed session status = %v, want %q", detailSession["status"], "closed")
+	}
+
+	activeSessionResponse := performJSONRequest(
+		t,
+		router,
+		nethttp.MethodPost,
+		"/api/sessions",
+		map[string]any{
+			"date":                 "2026-06-15T08:00:00Z",
+			"courseName":           "台中高爾夫俱樂部",
+			"maxPlayers":           12,
+			"registrationDeadline": "2026-06-10T23:59:00Z",
+			"status":               "open",
+			"notes":                "Morning round",
+		},
+	)
+	if activeSessionResponse.Code != nethttp.StatusCreated {
+		t.Fatalf("create active session status = %d, want %d", activeSessionResponse.Code, nethttp.StatusCreated)
+	}
+
+	var activeSession map[string]any
+	decodeResponseBody(t, activeSessionResponse, &activeSession)
+
+	updateResponse := performJSONRequest(
+		t,
+		router,
+		nethttp.MethodPatch,
+		"/api/sessions/"+activeSession["id"].(string),
+		map[string]any{
+			"date":                 "2026-06-15T09:00:00Z",
+			"courseName":           "台中高爾夫俱樂部",
+			"courseAddress":        "台中市大雅區",
+			"maxPlayers":           16,
+			"registrationDeadline": "2026-06-10T23:59:00Z",
+			"status":               "open",
+			"notes":                "Updated tee time",
+		},
+	)
+	if updateResponse.Code != nethttp.StatusOK {
+		t.Fatalf("update session status = %d, want %d", updateResponse.Code, nethttp.StatusOK)
+	}
+
+	invalidTransitionResponse := performJSONRequest(
+		t,
+		router,
+		nethttp.MethodPatch,
+		"/api/sessions/"+activeSession["id"].(string),
+		map[string]any{
+			"date":                 "2026-06-15T09:00:00Z",
+			"courseName":           "台中高爾夫俱樂部",
+			"courseAddress":        "台中市大雅區",
+			"maxPlayers":           16,
+			"registrationDeadline": "2026-06-10T23:59:00Z",
+			"status":               "confirmed",
+			"notes":                "Updated tee time",
+		},
+	)
+	if invalidTransitionResponse.Code != nethttp.StatusUnprocessableEntity {
+		t.Fatalf("invalid transition status = %d, want %d", invalidTransitionResponse.Code, nethttp.StatusUnprocessableEntity)
+	}
+
+	closeResponse := performJSONRequest(
+		t,
+		router,
+		nethttp.MethodPatch,
+		"/api/sessions/"+activeSession["id"].(string),
+		map[string]any{
+			"date":                 "2026-06-15T09:00:00Z",
+			"courseName":           "台中高爾夫俱樂部",
+			"courseAddress":        "台中市大雅區",
+			"maxPlayers":           16,
+			"registrationDeadline": "2026-06-10T23:59:00Z",
+			"status":               "closed",
+			"notes":                "Registration closed",
+		},
+	)
+	if closeResponse.Code != nethttp.StatusOK {
+		t.Fatalf("close session status = %d, want %d", closeResponse.Code, nethttp.StatusOK)
+	}
+
+	confirmResponse := performJSONRequest(
+		t,
+		router,
+		nethttp.MethodPatch,
+		"/api/sessions/"+activeSession["id"].(string),
+		map[string]any{
+			"date":                 "2026-06-15T09:00:00Z",
+			"courseName":           "台中高爾夫俱樂部",
+			"courseAddress":        "台中市大雅區",
+			"maxPlayers":           16,
+			"registrationDeadline": "2026-06-10T23:59:00Z",
+			"status":               "confirmed",
+			"notes":                "Pairings locked",
+		},
+	)
+	if confirmResponse.Code != nethttp.StatusOK {
+		t.Fatalf("confirm session status = %d, want %d", confirmResponse.Code, nethttp.StatusOK)
+	}
+
+	completeResponse := performJSONRequest(
+		t,
+		router,
+		nethttp.MethodPatch,
+		"/api/sessions/"+activeSession["id"].(string),
+		map[string]any{
+			"date":                 "2026-06-15T09:00:00Z",
+			"courseName":           "台中高爾夫俱樂部",
+			"courseAddress":        "台中市大雅區",
+			"maxPlayers":           16,
+			"registrationDeadline": "2026-06-10T23:59:00Z",
+			"status":               "completed",
+			"notes":                "Round finished",
+		},
+	)
+	if completeResponse.Code != nethttp.StatusOK {
+		t.Fatalf("complete session status = %d, want %d", completeResponse.Code, nethttp.StatusOK)
+	}
+
+	listResponse := performJSONRequest(t, router, nethttp.MethodGet, "/api/sessions", nil)
+	if listResponse.Code != nethttp.StatusOK {
+		t.Fatalf("list sessions status = %d, want %d", listResponse.Code, nethttp.StatusOK)
+	}
+
+	var sessions []map[string]any
+	decodeResponseBody(t, listResponse, &sessions)
+	if len(sessions) != 2 {
+		t.Fatalf("sessions length = %d, want %d", len(sessions), 2)
+	}
+}
+
 func newTestRouter(t *testing.T) (*gin.Engine, func()) {
 	t.Helper()
 

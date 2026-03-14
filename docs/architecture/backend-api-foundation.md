@@ -29,7 +29,9 @@ The backend now follows a simple layered structure:
 ### Sessions
 
 - `GET /api/sessions`
+- `GET /api/sessions/{sessionId}`
 - `POST /api/sessions`
+- `PATCH /api/sessions/{sessionId}`
 
 ### Registrations
 
@@ -75,6 +77,7 @@ Current error codes include:
 ## Current Boundaries
 
 - player management now supports manager-facing list, detail, filtering, create, and update flows
-- session and registration flows still remain at foundation scope
+- session management now supports manager-facing list, detail, create, update, status transitions, and auto-close reconciliation
+- registration flows still remain at foundation scope
 - auth / role enforcement is intentionally not implemented yet
 - richer report generation remains a later phase
