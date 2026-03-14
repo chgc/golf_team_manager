@@ -90,3 +90,18 @@
 - Review notes: Auto-approved because two reviewer agents reported no blocking issues.
 - Agent review summary: GPT-5.4 approve; Claude Sonnet 4.5 approve.
 
+## Feedback
+
+- Reviewer agent 1:
+  - 要求明確說明本 work item 必須直接補齊缺少的球員 detail / update routes，不能假設 foundation 已經具備。
+  - 要求明確標示相依於 `auth-foundation`。
+  - 要求釐清 duplicate-name feedback 屬於 warning-only，不應視為阻擋儲存的錯誤。
+- Reviewer agent 2:
+  - 要求 player edit flow 明確納入 `GET /api/players/{playerId}` 與 `PATCH /api/players/{playerId}`。
+  - 要求更清楚定義 email validation 與 warning handling 的契約。
+  - 要求在 scope 中明確說明 manager-only 僅為目前的 UI / identity context，不在此任務新增 route-level authorization。
+- Applied proposal updates:
+  - 補上 `auth-foundation` 相依性。
+  - 擴充 scope，將缺少的 player detail / update backend routes 納入本次交付。
+  - 補充 email validation 權威來源、duplicate-name warning 行為，以及 inactive / reactivation 的預期規則。
+

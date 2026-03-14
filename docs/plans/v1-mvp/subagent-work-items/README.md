@@ -10,10 +10,13 @@
 2. subagent 在開始實作前，先建立一份工作文件
 3. 工作文件放在 `pending\`
 4. 等待 review
-5. 只有在**使用者明確指示**後，才可將文件移到 `approved\`
-6. 文件移到 `approved\` 後，需先將這次核可結果 commit
-7. 完成 commit 後，才可在 `git worktree` 環境下開始實作
-8. 任務完成後，將工作文件移到 `completed\<date>\`
+5. review 預設由兩個獨立 reviewer agent 進行
+6. reviewer agent 的建議需同步回寫到 proposal 的 `Feedback` 區塊
+7. 若兩個 reviewer agent 都沒有 blocking issue，則可直接認定為核可，將文件移到 `approved\`
+8. 若任一 reviewer agent 提出 blocking issue，需先修正 proposal 並重新 review
+9. 文件移到 `approved\` 後，需先將這次核可結果 commit
+10. 完成 commit 後，才可在 `git worktree` 環境下開始實作
+11. 任務完成後，將工作文件移到 `completed\<date>\`
 
 ## 目錄
 
@@ -55,7 +58,8 @@ subagent-work-items\
 ## 注意事項
 
 - 未經 review 核可，不得開始實作
-- 除非使用者明確指示，不能自動將文件從 `pending\` 移到 `approved\`
+- reviewer agent 的建議與 blocking issue 需回寫到 proposal 的 `Feedback` 區塊
+- 若兩個 reviewer agent 都沒有 blocking issue，可自動將文件從 `pending\` 移到 `approved\`
 - 文件進入 `approved\` 後，未完成 commit 前不得開始實作
 - 任務完成後，需移動到 `completed\<date>\`
 - 若工作範圍變更，需更新文件並重新 review

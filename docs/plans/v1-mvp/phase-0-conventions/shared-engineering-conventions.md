@@ -67,7 +67,9 @@
 - 每個 subagent 在開始實作前，都必須先整理「此次要做的事情」成文件
 - 該文件需提交到 `docs\plans\v1-mvp\subagent-work-items\pending\`
 - 文件經 review 核可前，不得開始實作
-- 只有在使用者明確指示後，文件才可從 `docs\plans\v1-mvp\subagent-work-items\pending\` 移到 `docs\plans\v1-mvp\subagent-work-items\approved\`
+- review 預設由兩個獨立 reviewer agent 進行；若兩者都沒有 blocking issue，文件可自動從 `docs\plans\v1-mvp\subagent-work-items\pending\` 移到 `docs\plans\v1-mvp\subagent-work-items\approved\`
+- reviewer agent 的建議與 blocking issue 必須同步回寫到 proposal 的 `Feedback` 區塊
+- 若任一 reviewer agent 提出 blocking issue，需先修正 proposal 並重新 review
 - 文件移到 `approved` 後，需先 commit，之後才可在 `git worktree` 環境中開始實作
 - 若 work item 有相依性，必須在文件中明確標示依賴項
 - 若 scope 變更，需更新文件並重新 review

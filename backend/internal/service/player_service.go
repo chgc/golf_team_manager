@@ -2,6 +2,8 @@ package service
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"github.com/chgc/golf_team_manager/backend/internal/domain"
 	"github.com/chgc/golf_team_manager/backend/internal/repository"
@@ -28,8 +30,31 @@ func (s *PlayerService) Create(ctx context.Context, input domain.PlayerWriteDTO)
 	return mapPlayer(player), nil
 }
 
-func (s *PlayerService) List(ctx context.Context) ([]domain.PlayerReadDTO, error) {
-	players, err := s.repository.List(ctx)
+func (s *PlayerService) GetByID(ctx context.Context, playerID string) (domain.PlayerReadDTO, error) {
+	player, err := s.repository.GetByID(ctx, playerID)
+	if err != nil {
+		return domain.PlayerReadDTO{}, err
+	}
+
+	return mapPlayer(player), nil
+}
+
+func (s *PlayerService) List(
+	ctx context.Context,
+	query string,
+	status string,
+) ([]domain.PlayerReadDTO, error) {
+	filter := repository.PlayerListFilter{Query: query}
+	if status != "" {
+		switch normalizedStatus := domain.PlayerStatus(strings.TrimSpace(status)); normalizedStatus {
+		case domain.PlayerStatusActive, domain.PlayerStatusInactive:
+			filter.Status = normalizedStatus
+		default:
+			return nil, domain.ValidationErrors{fmt.Errorf("invalid player status filter %q", status)}
+		}
+	}
+
+	players, err := s.repository.List(ctx, filter)
 	if err != nil {
 		return nil, err
 	}
@@ -40,6 +65,23 @@ func (s *PlayerService) List(ctx context.Context) ([]domain.PlayerReadDTO, error
 	}
 
 	return results, nil
+}
+
+func (s *PlayerService) Update(
+	ctx context.Context,
+	playerID string,
+	input domain.PlayerWriteDTO,
+) (domain.PlayerReadDTO, error) {
+	if err := domain.ValidatePlayerWriteDTO(input); err != nil {
+		return domain.PlayerReadDTO{}, err
+	}
+
+	player, err := s.repository.Update(ctx, playerID, input)
+	if err != nil {
+		return domain.PlayerReadDTO{}, err
+	}
+
+	return mapPlayer(player), nil
 }
 
 func mapPlayer(player domain.Player) domain.PlayerReadDTO {

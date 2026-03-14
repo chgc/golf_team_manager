@@ -167,6 +167,92 @@ func TestPlayerSessionAndRegistrationFlow(t *testing.T) {
 	}
 }
 
+func TestPlayerDetailUpdateAndFilteringFlow(t *testing.T) {
+	router, cleanup := newTestRouter(t)
+	defer cleanup()
+
+	firstPlayerResponse := performJSONRequest(
+		t,
+		router,
+		nethttp.MethodPost,
+		"/api/players",
+		map[string]any{
+			"name":     "王大明",
+			"handicap": 12.5,
+			"status":   "active",
+		},
+	)
+	if firstPlayerResponse.Code != nethttp.StatusCreated {
+		t.Fatalf("create first player status = %d, want %d", firstPlayerResponse.Code, nethttp.StatusCreated)
+	}
+
+	var firstPlayer map[string]any
+	decodeResponseBody(t, firstPlayerResponse, &firstPlayer)
+
+	secondPlayerResponse := performJSONRequest(
+		t,
+		router,
+		nethttp.MethodPost,
+		"/api/players",
+		map[string]any{
+			"name":     "李小華",
+			"handicap": 18,
+			"status":   "active",
+		},
+	)
+	if secondPlayerResponse.Code != nethttp.StatusCreated {
+		t.Fatalf("create second player status = %d, want %d", secondPlayerResponse.Code, nethttp.StatusCreated)
+	}
+
+	playerDetailResponse := performJSONRequest(
+		t,
+		router,
+		nethttp.MethodGet,
+		"/api/players/"+firstPlayer["id"].(string),
+		nil,
+	)
+	if playerDetailResponse.Code != nethttp.StatusOK {
+		t.Fatalf("get player status = %d, want %d", playerDetailResponse.Code, nethttp.StatusOK)
+	}
+
+	updateResponse := performJSONRequest(
+		t,
+		router,
+		nethttp.MethodPatch,
+		"/api/players/"+firstPlayer["id"].(string),
+		map[string]any{
+			"name":     "王大明",
+			"handicap": 11.5,
+			"email":    "wang@example.com",
+			"status":   "inactive",
+		},
+	)
+	if updateResponse.Code != nethttp.StatusOK {
+		t.Fatalf("update player status = %d, want %d", updateResponse.Code, nethttp.StatusOK)
+	}
+
+	filteredResponse := performJSONRequest(
+		t,
+		router,
+		nethttp.MethodGet,
+		"/api/players?status=inactive&query=%E7%8E%8B",
+		nil,
+	)
+	if filteredResponse.Code != nethttp.StatusOK {
+		t.Fatalf("filtered list status = %d, want %d", filteredResponse.Code, nethttp.StatusOK)
+	}
+
+	var filteredPlayers []map[string]any
+	decodeResponseBody(t, filteredResponse, &filteredPlayers)
+	if len(filteredPlayers) != 1 {
+		t.Fatalf("filtered players length = %d, want %d", len(filteredPlayers), 1)
+	}
+
+	if filteredPlayers[0]["status"] != "inactive" {
+		t.Fatalf("filtered player status = %v, want %q", filteredPlayers[0]["status"], "inactive")
+	}
+}
+
 func newTestRouter(t *testing.T) (*gin.Engine, func()) {
 	t.Helper()
 

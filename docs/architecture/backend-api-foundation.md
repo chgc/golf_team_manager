@@ -21,7 +21,10 @@ The backend now follows a simple layered structure:
 ### Players
 
 - `GET /api/players`
+- `GET /api/players/{playerId}`
 - `POST /api/players`
+- `PATCH /api/players/{playerId}`
+- `GET /api/players` supports `query` and `status` filters
 
 ### Sessions
 
@@ -71,6 +74,7 @@ Current error codes include:
 
 ## Current Boundaries
 
-- Create/list flows exist for foundation purposes, but feature-complete CRUD is still deferred
+- player management now supports manager-facing list, detail, filtering, create, and update flows
+- session and registration flows still remain at foundation scope
 - auth / role enforcement is intentionally not implemented yet
 - richer report generation remains a later phase

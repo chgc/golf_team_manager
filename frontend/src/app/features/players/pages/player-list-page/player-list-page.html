@@ -1,17 +1,139 @@
 <section class="feature-page">
   <mat-card appearance="outlined">
     <mat-card-header>
-      <mat-card-title>Players shell</mat-card-title>
-      <mat-card-subtitle>Manager-facing player workflows will land here.</mat-card-subtitle>
+      <mat-card-title>Player management</mat-card-title>
+      <mat-card-subtitle>Manager-facing player list, filters, and create/edit flow.</mat-card-subtitle>
     </mat-card-header>
 
     <mat-card-content>
-      @for (item of focusAreas; track item.title) {
-        <div class="focus-item">
-          <h2>{{ item.title }}</h2>
-          <p>{{ item.description }}</p>
+      <form [formGroup]="filterForm" class="filter-form" (ngSubmit)="applyFilters()">
+        <mat-form-field appearance="outline">
+          <mat-label>Search players</mat-label>
+          <input formControlName="query" matInput placeholder="Search by name" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Status</mat-label>
+          <mat-select formControlName="status">
+            <mat-option value="all">All</mat-option>
+            <mat-option value="active">Active</mat-option>
+            <mat-option value="inactive">Inactive</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <div class="filter-actions">
+          <button mat-flat-button color="primary" type="submit">Apply filters</button>
+          <button mat-button type="button" (click)="resetFilters()">Reset</button>
         </div>
-      }
+      </form>
     </mat-card-content>
   </mat-card>
+
+  @if (errorMessage(); as errorMessage) {
+    <mat-card appearance="outlined" class="error-card">
+      <mat-card-content>{{ errorMessage }}</mat-card-content>
+    </mat-card>
+  }
+
+  <div class="player-grid">
+    <mat-card appearance="outlined">
+      <mat-card-header>
+        <mat-card-title>Players</mat-card-title>
+        <mat-card-subtitle>{{ players().length }} visible result(s)</mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        @if (players().length === 0) {
+          <p>No players match the current filters.</p>
+        } @else {
+          <div class="player-list">
+            @for (player of players(); track player.id) {
+              <article class="player-row">
+                <div>
+                  <h2>{{ player.name }}</h2>
+                  <p>
+                    Handicap {{ player.handicap }} ·
+                    <span [class.inactive-status]="player.status === 'inactive'">
+                      {{ player.status }}
+                    </span>
+                  </p>
+                  @if (player.email) {
+                    <p>{{ player.email }}</p>
+                  }
+                </div>
+
+                <div class="row-actions">
+                  <button mat-button type="button" (click)="editPlayer(player.id)">Edit</button>
+                  <button
+                    mat-button
+                    type="button"
+                    (click)="togglePlayerStatus(player)"
+                  >
+                    {{ player.status === 'active' ? 'Deactivate' : 'Reactivate' }}
+                  </button>
+                </div>
+              </article>
+            }
+          </div>
+        }
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card appearance="outlined">
+      <mat-card-header>
+        <mat-card-title>{{ formModeLabel() }}</mat-card-title>
+        <mat-card-subtitle>
+          Duplicate names trigger a warning only. Backend validation remains authoritative.
+        </mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <form [formGroup]="playerForm" class="player-form" (ngSubmit)="submitPlayer()">
+          <mat-form-field appearance="outline">
+            <mat-label>Name</mat-label>
+            <input formControlName="name" matInput />
+          </mat-form-field>
+
+          @if (duplicateNameWarning(); as warning) {
+            <p class="warning-text">{{ warning }}</p>
+          }
+
+          <mat-form-field appearance="outline">
+            <mat-label>Handicap</mat-label>
+            <input formControlName="handicap" matInput type="number" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Email</mat-label>
+            <input formControlName="email" matInput type="email" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Phone</mat-label>
+            <input formControlName="phone" matInput />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Status</mat-label>
+            <mat-select formControlName="status">
+              <mat-option value="active">Active</mat-option>
+              <mat-option value="inactive">Inactive</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Notes</mat-label>
+            <textarea formControlName="notes" matInput rows="4"></textarea>
+          </mat-form-field>
+
+          <div class="form-actions">
+            <button mat-flat-button color="primary" type="submit">
+              {{ selectedPlayerId() ? 'Save changes' : 'Create player' }}
+            </button>
+            <button mat-button type="button" (click)="resetPlayerForm()">Reset</button>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  </div>
 </section>

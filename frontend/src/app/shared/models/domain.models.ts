@@ -15,6 +15,8 @@ export interface PlayerReadDto extends PlayerWriteDto {
   updatedAt: string;
 }
 
+export type PlayerFilterStatus = 'all' | PlayerStatus;
+
 export type SessionStatus = 'open' | 'closed' | 'confirmed' | 'completed' | 'cancelled';
 
 export interface SessionWriteDto {

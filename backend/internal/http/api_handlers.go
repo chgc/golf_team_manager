@@ -45,13 +45,27 @@ func (h *Handlers) CreatePlayer(c *gin.Context) {
 }
 
 func (h *Handlers) ListPlayers(c *gin.Context) {
-	players, err := h.playerService.List(c.Request.Context())
+	players, err := h.playerService.List(
+		c.Request.Context(),
+		c.Query("query"),
+		c.Query("status"),
+	)
 	if err != nil {
 		respondError(c, err)
 		return
 	}
 
 	c.JSON(nethttp.StatusOK, players)
+}
+
+func (h *Handlers) GetPlayerByID(c *gin.Context) {
+	player, err := h.playerService.GetByID(c.Request.Context(), c.Param("playerId"))
+	if err != nil {
+		respondError(c, err)
+		return
+	}
+
+	c.JSON(nethttp.StatusOK, player)
 }
 
 func (h *Handlers) CreateSession(c *gin.Context) {
@@ -78,6 +92,22 @@ func (h *Handlers) ListSessions(c *gin.Context) {
 	}
 
 	c.JSON(nethttp.StatusOK, sessions)
+}
+
+func (h *Handlers) UpdatePlayer(c *gin.Context) {
+	var input domain.PlayerWriteDTO
+	if err := c.ShouldBindJSON(&input); err != nil {
+		respondError(c, domain.ValidationErrors{err})
+		return
+	}
+
+	player, err := h.playerService.Update(c.Request.Context(), c.Param("playerId"), input)
+	if err != nil {
+		respondError(c, err)
+		return
+	}
+
+	c.JSON(nethttp.StatusOK, player)
 }
 
 func (h *Handlers) CreateRegistration(c *gin.Context) {

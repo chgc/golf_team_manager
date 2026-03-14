@@ -1,5 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { of } from 'rxjs';
 
+import { PlayersApi } from '../../data-access/players-api';
 import { PlayerListPage } from './player-list-page';
 
 describe('PlayerListPage', () => {
@@ -8,7 +10,18 @@ describe('PlayerListPage', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [PlayerListPage]
+      imports: [PlayerListPage],
+      providers: [
+        {
+          provide: PlayersApi,
+          useValue: {
+            listPlayers: () => of([]),
+            getPlayer: () => of(),
+            createPlayer: () => of(),
+            updatePlayer: () => of(),
+          },
+        },
+      ],
     })
     .compileComponents();
 

@@ -49,3 +49,10 @@
 - Status: pending-review
 - Reviewer:
 - Review notes:
+- Agent review summary:
+
+## Feedback
+
+- Reviewer agent 1:
+- Reviewer agent 2:
+- Applied proposal updates:

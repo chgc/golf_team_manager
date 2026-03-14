@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/chgc/golf_team_manager/backend/internal/domain"
@@ -14,7 +15,13 @@ import (
 type PlayerRepository interface {
 	Create(ctx context.Context, input domain.PlayerWriteDTO) (domain.Player, error)
 	GetByID(ctx context.Context, playerID string) (domain.Player, error)
-	List(ctx context.Context) ([]domain.Player, error)
+	List(ctx context.Context, filter PlayerListFilter) ([]domain.Player, error)
+	Update(ctx context.Context, playerID string, input domain.PlayerWriteDTO) (domain.Player, error)
+}
+
+type PlayerListFilter struct {
+	Query  string
+	Status domain.PlayerStatus
 }
 
 type SQLitePlayerRepository struct {
@@ -81,13 +88,33 @@ func (r *SQLitePlayerRepository) GetByID(ctx context.Context, playerID string) (
 	return player, nil
 }
 
-func (r *SQLitePlayerRepository) List(ctx context.Context) ([]domain.Player, error) {
-	rows, err := r.database.QueryContext(
-		ctx,
+func (r *SQLitePlayerRepository) List(ctx context.Context, filter PlayerListFilter) ([]domain.Player, error) {
+	queryBuilder := strings.Builder{}
+	queryBuilder.WriteString(
 		`SELECT id, name, handicap, phone, email, status, notes, created_at, updated_at
-		FROM players
-		ORDER BY created_at ASC`,
+		FROM players`,
 	)
+
+	args := make([]any, 0, 2)
+	conditions := make([]string, 0, 2)
+	if strings.TrimSpace(filter.Query) != "" {
+		conditions = append(conditions, "name LIKE ? COLLATE NOCASE")
+		args = append(args, "%"+strings.TrimSpace(filter.Query)+"%")
+	}
+
+	if filter.Status != "" {
+		conditions = append(conditions, "status = ?")
+		args = append(args, filter.Status)
+	}
+
+	if len(conditions) > 0 {
+		queryBuilder.WriteString(" WHERE ")
+		queryBuilder.WriteString(strings.Join(conditions, " AND "))
+	}
+
+	queryBuilder.WriteString(" ORDER BY created_at ASC")
+
+	rows, err := r.database.QueryContext(ctx, queryBuilder.String(), args...)
 	if err != nil {
 		return nil, fmt.Errorf("list players: %w", err)
 	}
@@ -108,4 +135,40 @@ func (r *SQLitePlayerRepository) List(ctx context.Context) ([]domain.Player, err
 	}
 
 	return players, nil
+}
+
+func (r *SQLitePlayerRepository) Update(
+	ctx context.Context,
+	playerID string,
+	input domain.PlayerWriteDTO,
+) (domain.Player, error) {
+	now := time.Now().UTC()
+	result, err := r.database.ExecContext(
+		ctx,
+		`UPDATE players
+		SET name = ?, handicap = ?, phone = ?, email = ?, status = ?, notes = ?, updated_at = ?
+		WHERE id = ?`,
+		input.Name,
+		input.Handicap,
+		input.Phone,
+		input.Email,
+		input.Status,
+		input.Notes,
+		formatTimestamp(now),
+		playerID,
+	)
+	if err != nil {
+		return domain.Player{}, fmt.Errorf("update player: %w", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return domain.Player{}, fmt.Errorf("rows affected for player update: %w", err)
+	}
+
+	if rowsAffected == 0 {
+		return domain.Player{}, ErrNotFound
+	}
+
+	return r.GetByID(ctx, playerID)
 }
