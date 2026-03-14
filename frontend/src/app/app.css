@@ -10,11 +10,23 @@
 .primary-nav {
   display: flex;
   gap: 8px;
-  margin-left: auto;
+  margin-left: 16px;
 }
 
 .active-link {
   background-color: rgb(255 255 255 / 16%);
+}
+
+.identity-badge {
+  align-items: center;
+  display: flex;
+  font-size: 0.875rem;
+  gap: 8px;
+  margin-left: 16px;
+}
+
+.identity-divider {
+  opacity: 0.6;
 }
 
 .app-shell {

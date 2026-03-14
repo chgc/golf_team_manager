@@ -21,6 +21,13 @@ describe('App', () => {
     const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('mat-toolbar span')?.textContent).toContain('Golf Team Manager');
+    expect(compiled.querySelector('.app-title')?.textContent).toContain('Golf Team Manager');
+  });
+
+  it('should render the development auth identity badge', () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('.identity-badge')?.textContent).toContain('Demo Manager');
   });
 });

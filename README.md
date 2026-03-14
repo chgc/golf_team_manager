@@ -92,6 +92,6 @@ Phase 1 foundation has been validated across:
 - SQLite migration bootstrap
 - backend startup and `/health` smoke check
 
-The next recommended review item is `auth-foundation`.
+The next recommended review item is `players-feature`.
 
 The backend currently defaults to a local SQLite database at `backend\data\golf_team_manager.sqlite` and runs baseline migrations on startup.

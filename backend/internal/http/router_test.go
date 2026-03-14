@@ -44,6 +44,23 @@ func TestNewRouterHealthEndpoint(t *testing.T) {
 	}
 }
 
+func TestGetCurrentPrincipalReturnsDevelopmentStubIdentity(t *testing.T) {
+	router, cleanup := newTestRouter(t)
+	defer cleanup()
+
+	responseRecorder := performJSONRequest(t, router, nethttp.MethodGet, "/api/auth/me", nil)
+	if responseRecorder.Code != nethttp.StatusOK {
+		t.Fatalf("status code = %d, want %d", responseRecorder.Code, nethttp.StatusOK)
+	}
+
+	var response map[string]any
+	decodeResponseBody(t, responseRecorder, &response)
+
+	if response["role"] != "manager" {
+		t.Fatalf("role = %v, want %q", response["role"], "manager")
+	}
+}
+
 func TestCreatePlayerReturnsValidationError(t *testing.T) {
 	router, cleanup := newTestRouter(t)
 	defer cleanup()
@@ -158,7 +175,12 @@ func newTestRouter(t *testing.T) (*gin.Engine, func()) {
 		database.Close()
 	}
 
-	return NewRouter(database), cleanup
+	testConfig, err := config.LoadFromEnv()
+	if err != nil {
+		t.Fatalf("LoadFromEnv() error = %v", err)
+	}
+
+	return NewRouter(database, testConfig), cleanup
 }
 
 func openTestDatabase(t *testing.T) *sql.DB {

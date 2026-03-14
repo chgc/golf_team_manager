@@ -13,6 +13,14 @@
       </a>
     }
   </nav>
+
+  <div class="identity-badge" aria-label="Current identity">
+    <span>{{ authPrincipal().displayName }}</span>
+    <span class="identity-divider">|</span>
+    <span>{{ authRoleLabel() }}</span>
+    <span class="identity-divider">|</span>
+    <span>{{ authModeLabel() }}</span>
+  </div>
 </mat-toolbar>
 
 <main class="app-shell">

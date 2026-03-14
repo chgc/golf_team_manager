@@ -11,6 +11,11 @@ func TestLoadFromEnvUsesDefaults(t *testing.T) {
 	t.Setenv(envHTTPReadHeaderTimeout, "")
 	t.Setenv(envDBPath, "")
 	t.Setenv(envDBAutoMigrate, "")
+	t.Setenv(envAuthMode, "")
+	t.Setenv(envAuthRole, "")
+	t.Setenv(envAuthDisplayName, "")
+	t.Setenv(envAuthSubject, "")
+	t.Setenv(envAuthPlayerID, "")
 
 	cfg, err := LoadFromEnv()
 	if err != nil {
@@ -36,6 +41,14 @@ func TestLoadFromEnvUsesDefaults(t *testing.T) {
 	if cfg.DB.AutoMigrate != defaultDBAutoMigrate {
 		t.Fatalf("DB.AutoMigrate = %t, want %t", cfg.DB.AutoMigrate, defaultDBAutoMigrate)
 	}
+
+	if cfg.Auth.Mode != defaultAuthMode {
+		t.Fatalf("Auth.Mode = %q, want %q", cfg.Auth.Mode, defaultAuthMode)
+	}
+
+	if cfg.Auth.DevRole != defaultAuthRole {
+		t.Fatalf("Auth.DevRole = %q, want %q", cfg.Auth.DevRole, defaultAuthRole)
+	}
 }
 
 func TestLoadFromEnvUsesOverrides(t *testing.T) {
@@ -44,6 +57,11 @@ func TestLoadFromEnvUsesOverrides(t *testing.T) {
 	t.Setenv(envHTTPReadHeaderTimeout, "3s")
 	t.Setenv(envDBPath, "data\\test.sqlite")
 	t.Setenv(envDBAutoMigrate, "false")
+	t.Setenv(envAuthMode, "dev_stub")
+	t.Setenv(envAuthRole, "player")
+	t.Setenv(envAuthDisplayName, "Demo Player")
+	t.Setenv(envAuthSubject, "dev-player")
+	t.Setenv(envAuthPlayerID, "player-1")
 
 	cfg, err := LoadFromEnv()
 	if err != nil {
@@ -69,6 +87,22 @@ func TestLoadFromEnvUsesOverrides(t *testing.T) {
 	if cfg.DB.AutoMigrate {
 		t.Fatal("DB.AutoMigrate = true, want false")
 	}
+
+	if cfg.Auth.DevRole != "player" {
+		t.Fatalf("Auth.DevRole = %q, want %q", cfg.Auth.DevRole, "player")
+	}
+
+	if cfg.Auth.DevDisplayName != "Demo Player" {
+		t.Fatalf("Auth.DevDisplayName = %q, want %q", cfg.Auth.DevDisplayName, "Demo Player")
+	}
+
+	if cfg.Auth.DevSubject != "dev-player" {
+		t.Fatalf("Auth.DevSubject = %q, want %q", cfg.Auth.DevSubject, "dev-player")
+	}
+
+	if cfg.Auth.DevPlayerID != "player-1" {
+		t.Fatalf("Auth.DevPlayerID = %q, want %q", cfg.Auth.DevPlayerID, "player-1")
+	}
 }
 
 func TestLoadFromEnvRejectsInvalidPort(t *testing.T) {
@@ -82,6 +116,15 @@ func TestLoadFromEnvRejectsInvalidPort(t *testing.T) {
 
 func TestLoadFromEnvRejectsInvalidAutoMigrateValue(t *testing.T) {
 	t.Setenv(envDBAutoMigrate, "not-a-bool")
+
+	_, err := LoadFromEnv()
+	if err == nil {
+		t.Fatal("LoadFromEnv() error = nil, want error")
+	}
+}
+
+func TestLoadFromEnvRejectsInvalidAuthRole(t *testing.T) {
+	t.Setenv(envAuthRole, "guest")
 
 	_, err := LoadFromEnv()
 	if err == nil {

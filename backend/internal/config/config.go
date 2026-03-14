@@ -15,16 +15,26 @@ const (
 	defaultHTTPReadTimeout   = 5 * time.Second
 	defaultDBPath            = "data\\golf_team_manager.sqlite"
 	defaultDBAutoMigrate     = true
+	defaultAuthMode          = "dev_stub"
+	defaultAuthRole          = "manager"
+	defaultAuthDisplayName   = "Demo Manager"
+	defaultAuthSubject       = "dev-manager"
 	envHTTPHost              = "HTTP_HOST"
 	envHTTPPort              = "HTTP_PORT"
 	envHTTPReadHeaderTimeout = "HTTP_READ_HEADER_TIMEOUT"
 	envDBPath                = "DB_PATH"
 	envDBAutoMigrate         = "DB_AUTO_MIGRATE"
+	envAuthMode              = "AUTH_MODE"
+	envAuthRole              = "AUTH_DEV_DEFAULT_ROLE"
+	envAuthDisplayName       = "AUTH_DEV_DEFAULT_NAME"
+	envAuthSubject           = "AUTH_DEV_DEFAULT_SUBJECT"
+	envAuthPlayerID          = "AUTH_DEV_DEFAULT_PLAYER_ID"
 )
 
 type Config struct {
 	HTTP HTTPConfig
 	DB   DBConfig
+	Auth AuthConfig
 }
 
 type HTTPConfig struct {
@@ -36,6 +46,14 @@ type HTTPConfig struct {
 type DBConfig struct {
 	Path        string
 	AutoMigrate bool
+}
+
+type AuthConfig struct {
+	Mode           string
+	DevDisplayName string
+	DevPlayerID    string
+	DevRole        string
+	DevSubject     string
 }
 
 func LoadFromEnv() (Config, error) {
@@ -54,6 +72,12 @@ func LoadFromEnv() (Config, error) {
 		return Config{}, err
 	}
 
+	authMode := loadStringEnv(envAuthMode, defaultAuthMode)
+	authRole := loadStringEnv(envAuthRole, defaultAuthRole)
+	if authRole != "manager" && authRole != "player" {
+		return Config{}, fmt.Errorf("%s must be manager or player", envAuthRole)
+	}
+
 	return Config{
 		HTTP: HTTPConfig{
 			Host:        loadStringEnv(envHTTPHost, defaultHTTPHost),
@@ -63,6 +87,13 @@ func LoadFromEnv() (Config, error) {
 		DB: DBConfig{
 			Path:        filepath.Clean(loadStringEnv(envDBPath, defaultDBPath)),
 			AutoMigrate: autoMigrate,
+		},
+		Auth: AuthConfig{
+			Mode:           authMode,
+			DevDisplayName: loadStringEnv(envAuthDisplayName, defaultAuthDisplayName),
+			DevPlayerID:    loadStringEnv(envAuthPlayerID, ""),
+			DevRole:        authRole,
+			DevSubject:     loadStringEnv(envAuthSubject, defaultAuthSubject),
 		},
 	}, nil
 }

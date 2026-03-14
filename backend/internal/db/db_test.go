@@ -38,7 +38,8 @@ func TestRunMigrationsCreatesBaselineSchema(t *testing.T) {
 	assertTableExists(t, database, "players")
 	assertTableExists(t, database, "sessions")
 	assertTableExists(t, database, "registrations")
-	assertAppliedMigrationCount(t, database, 2)
+	assertTableExists(t, database, "users")
+	assertAppliedMigrationCount(t, database, 3)
 }
 
 func TestRunMigrationsIsIdempotent(t *testing.T) {
@@ -53,7 +54,7 @@ func TestRunMigrationsIsIdempotent(t *testing.T) {
 		t.Fatalf("second RunMigrations() error = %v", err)
 	}
 
-	assertAppliedMigrationCount(t, database, 2)
+	assertAppliedMigrationCount(t, database, 3)
 }
 
 func openTestDatabase(t *testing.T) *sql.DB {
