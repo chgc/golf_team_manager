@@ -1,0 +1,137 @@
+:host {
+  display: block;
+}
+
+.page-header,
+.section-heading,
+.card-actions,
+.user-card__header {
+  align-items: flex-start;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+}
+
+.page-header h1,
+.section-heading h2,
+.user-card__header h3,
+.summary-value,
+.summary-label,
+.detail-list dd,
+.detail-list dt {
+  margin: 0;
+}
+
+.page-header p,
+.section-heading p,
+.status-message {
+  color: rgb(0 0 0 / 72%);
+  margin: 8px 0 0;
+}
+
+.summary-grid,
+.user-grid,
+.editor-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.summary-grid {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  margin: 24px 0;
+}
+
+.summary-label {
+  color: rgb(0 0 0 / 64%);
+  font-size: 0.875rem;
+}
+
+.summary-value {
+  font-size: 1.75rem;
+  font-weight: 600;
+  margin-top: 8px;
+}
+
+.user-section + .user-section {
+  margin-top: 32px;
+}
+
+.user-grid {
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  margin-top: 16px;
+}
+
+.user-card {
+  height: 100%;
+}
+
+.user-card__meta {
+  color: rgb(0 0 0 / 64%);
+  margin: 4px 0 0;
+}
+
+.role-pill {
+  background: rgb(25 118 210 / 12%);
+  border-radius: 999px;
+  color: rgb(25 118 210);
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  text-transform: capitalize;
+}
+
+.detail-list {
+  display: grid;
+  gap: 12px;
+  margin: 20px 0;
+}
+
+.detail-list div {
+  display: grid;
+  gap: 4px;
+}
+
+.detail-list dt {
+  color: rgb(0 0 0 / 64%);
+  font-size: 0.875rem;
+}
+
+.detail-list dd {
+  word-break: break-word;
+}
+
+.editor-grid {
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+.card-actions {
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.feedback-message,
+.error-message {
+  border-radius: 12px;
+  margin: 0 0 16px;
+  padding: 12px 16px;
+}
+
+.feedback-message {
+  background: rgb(46 125 50 / 10%);
+  color: rgb(27 94 32);
+}
+
+.error-message {
+  background: rgb(211 47 47 / 10%);
+  color: rgb(183 28 28);
+}
+
+@media (width <= 720px) {
+  .page-header,
+  .section-heading,
+  .card-actions,
+  .user-card__header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}

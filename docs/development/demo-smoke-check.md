@@ -129,9 +129,22 @@ Expected outcome:
 
 ### Linked-user follow-up smoke
 
-Manager-driven linking is not implemented in the current UI. To validate a linked LINE user locally, first complete the unlinked smoke above, then manually update the created `users.player_id` record in SQLite before logging in again.
+Use a manager account plus the new admin UI instead of manual SQLite edits.
 
-Expected linked-user outcome after that manual operator step:
+1. Complete the unlinked-user smoke above once so the target LINE account exists in `users`
+2. Bootstrap or sign in as a manager account
+3. Open `http://localhost:4200/admin/users`
+4. Confirm the target account appears in **Unlinked Accounts**
+5. Choose the intended player in **Player link**
+6. Optional: change **Role** to `manager` if this user should also manage the team
+7. Click **Save changes**
+8. Confirm the success message appears and the user moves into **Linked Accounts**
+9. Log out the manager
+10. Sign in again as the linked LINE user
 
+Expected linked-user outcome:
+
+- the manager can complete linkage without leaving the app
 - `/api/auth/me` returns the linked `playerId`
-- the user is redirected into the normal protected app routes instead of `/auth/pending-link`
+- the linked user is redirected into the normal protected app routes instead of `/auth/pending-link`
+- if the role was promoted to `manager`, the linked user can also open `/admin/users`

@@ -109,13 +109,13 @@ User-visible behavior:
 - the app redirects that user to `/auth/pending-link`
 - logout remains available from the pending-link page
 
-Current limitation:
+Current manager tooling:
 
-- there is no manager-linking UI in this repo yet
-- manager user administration API is now available at:
+- manager user administration UI is now available at `/admin/users`
+- backend manager user administration API is available at:
   - `GET /api/admin/users`
   - `PATCH /api/admin/users/:userId`
-- a full in-app linked-user smoke still depends on the manager admin UI landing; before that, operator/API-assisted validation is required
+- pending-link remains a manager-assisted flow; unlinked end users still cannot self-link inside the app
 
 ## Bootstrap the First Manager
 
@@ -159,6 +159,8 @@ Command rules:
 - confirm login redirects through LINE and returns to `/auth/done#token=...`
 - confirm `/api/auth/me` succeeds after callback
 - confirm a new LINE user lands on `/auth/pending-link`
+- confirm a manager can open `/admin/users`, link that account to a player, and optionally promote/demote role
+- confirm the linked user reaches the normal protected app after the next login
 - confirm logout returns the browser to `/login`
 
 ## Rollback / Fallback Guidance
@@ -191,5 +193,5 @@ This restores the local demo/bootstrap path without needing LINE credentials.
 
 - no secrets belong in the repo; `.env.example` uses placeholders only
 - refresh tokens are not implemented
-- manager-driven account linking is not implemented
+- end-user self-service account linking is not implemented
 - production secret-management and deployment automation are outside this document's scope

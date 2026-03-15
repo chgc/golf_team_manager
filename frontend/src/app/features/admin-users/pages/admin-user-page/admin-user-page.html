@@ -1,0 +1,227 @@
+<section class="page-header">
+  <div>
+    <h1>Admin Users</h1>
+    <p>
+      Managers can link authenticated accounts to players, review unlinked sign-ins, and update
+      manager access.
+    </p>
+  </div>
+
+  <button mat-stroked-button type="button" (click)="reload()">Refresh</button>
+</section>
+
+@if (feedbackMessage()) {
+  <p class="feedback-message" role="status">{{ feedbackMessage() }}</p>
+}
+
+@if (errorMessage()) {
+  <p class="error-message" role="alert">{{ errorMessage() }}</p>
+}
+
+<section class="summary-grid">
+  <mat-card appearance="outlined">
+    <mat-card-content>
+      <p class="summary-label">Total users</p>
+      <p class="summary-value">{{ users().length }}</p>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card appearance="outlined">
+    <mat-card-content>
+      <p class="summary-label">Managers</p>
+      <p class="summary-value">{{ managerCount() }}</p>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card appearance="outlined">
+    <mat-card-content>
+      <p class="summary-label">Unlinked accounts</p>
+      <p class="summary-value">{{ unlinkedUsers().length }}</p>
+    </mat-card-content>
+  </mat-card>
+</section>
+
+@if (isLoadingUsers() || isLoadingPlayers()) {
+  <p class="status-message">Loading admin users...</p>
+} @else {
+  <section class="user-section">
+    <div class="section-heading">
+      <div>
+        <h2>Unlinked Accounts</h2>
+        <p>Review recent sign-ins that still need a player link.</p>
+      </div>
+    </div>
+
+    @if (unlinkedUsers().length === 0) {
+      <p class="status-message">All authenticated users are currently linked to players.</p>
+    } @else {
+      <div class="user-grid">
+        @for (user of unlinkedUsers(); track user.userId) {
+          <mat-card appearance="outlined" class="user-card">
+            <mat-card-content>
+              <div class="user-card__header">
+                <div>
+                  <h3>{{ user.displayName }}</h3>
+                  <p class="user-card__meta">{{ user.provider }} · {{ maskSubject(user.subject) }}</p>
+                </div>
+                <span class="role-pill">{{ user.role }}</span>
+              </div>
+
+              <dl class="detail-list">
+                <div>
+                  <dt>User ID</dt>
+                  <dd>{{ user.userId }}</dd>
+                </div>
+                <div>
+                  <dt>Linked player</dt>
+                  <dd>{{ user.playerId ?? 'Not linked yet' }}</dd>
+                </div>
+                <div>
+                  <dt>Created</dt>
+                  <dd>{{ user.createdAt | date: 'medium' }}</dd>
+                </div>
+                <div>
+                  <dt>Updated</dt>
+                  <dd>{{ user.updatedAt | date: 'medium' }}</dd>
+                </div>
+              </dl>
+
+              <div class="editor-grid">
+                <mat-form-field appearance="outline">
+                  <mat-label>Role</mat-label>
+                  <mat-select
+                    [value]="selectedRole(user.userId)"
+                    (selectionChange)="onRoleChange(user.userId, $event)"
+                  >
+                    <mat-option value="player">Player</mat-option>
+                    <mat-option value="manager">Manager</mat-option>
+                  </mat-select>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Player link</mat-label>
+                  <mat-select
+                    [value]="selectedPlayerId(user.userId)"
+                    (selectionChange)="onPlayerChange(user.userId, $event)"
+                  >
+                    <mat-option value="">Not linked</mat-option>
+                    @for (player of players(); track player.id) {
+                      <mat-option [value]="player.id">{{ player.name }} · {{ player.id }}</mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+              </div>
+
+              <div class="card-actions">
+                <button
+                  mat-flat-button
+                  color="primary"
+                  type="button"
+                  [disabled]="isSaving(user.userId) || !hasPendingChanges(user)"
+                  (click)="saveUser(user)"
+                >
+                  Save changes
+                </button>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        }
+      </div>
+    }
+  </section>
+
+  <section class="user-section">
+    <div class="section-heading">
+      <div>
+        <h2>Linked Accounts</h2>
+        <p>Adjust existing player links and manager access without leaving the page.</p>
+      </div>
+    </div>
+
+    @if (linkedUsers().length === 0) {
+      <p class="status-message">No linked accounts are available yet.</p>
+    } @else {
+      <div class="user-grid">
+        @for (user of linkedUsers(); track user.userId) {
+          <mat-card appearance="outlined" class="user-card">
+            <mat-card-content>
+              <div class="user-card__header">
+                <div>
+                  <h3>{{ user.displayName }}</h3>
+                  <p class="user-card__meta">{{ user.provider }} · {{ maskSubject(user.subject) }}</p>
+                </div>
+                <span class="role-pill">{{ user.role }}</span>
+              </div>
+
+              <dl class="detail-list">
+                <div>
+                  <dt>User ID</dt>
+                  <dd>{{ user.userId }}</dd>
+                </div>
+                <div>
+                  <dt>Linked player</dt>
+                  <dd>{{ user.playerId ?? 'Not linked yet' }}</dd>
+                </div>
+                <div>
+                  <dt>Created</dt>
+                  <dd>{{ user.createdAt | date: 'medium' }}</dd>
+                </div>
+                <div>
+                  <dt>Updated</dt>
+                  <dd>{{ user.updatedAt | date: 'medium' }}</dd>
+                </div>
+              </dl>
+
+              <div class="editor-grid">
+                <mat-form-field appearance="outline">
+                  <mat-label>Role</mat-label>
+                  <mat-select
+                    [value]="selectedRole(user.userId)"
+                    (selectionChange)="onRoleChange(user.userId, $event)"
+                  >
+                    <mat-option value="player">Player</mat-option>
+                    <mat-option value="manager">Manager</mat-option>
+                  </mat-select>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Player link</mat-label>
+                  <mat-select
+                    [value]="selectedPlayerId(user.userId)"
+                    (selectionChange)="onPlayerChange(user.userId, $event)"
+                  >
+                    <mat-option value="">Not linked</mat-option>
+                    @for (player of players(); track player.id) {
+                      <mat-option [value]="player.id">{{ player.name }} · {{ player.id }}</mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+              </div>
+
+              <div class="card-actions">
+                <button
+                  mat-flat-button
+                  color="primary"
+                  type="button"
+                  [disabled]="isSaving(user.userId) || !hasPendingChanges(user)"
+                  (click)="saveUser(user)"
+                >
+                  Save changes
+                </button>
+
+                <button
+                  mat-stroked-button
+                  type="button"
+                  [disabled]="isSaving(user.userId) || !user.playerId"
+                  (click)="unlinkUser(user)"
+                >
+                  Unlink player
+                </button>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        }
+      </div>
+    }
+  </section>
+}

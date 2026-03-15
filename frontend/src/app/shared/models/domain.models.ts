@@ -72,3 +72,22 @@ export interface ReservationSummaryReadDto {
   summaryText: string;
   confirmedPlayers: ReservationSummaryPlayerReadDto[];
 }
+
+export type AdminUserLinkState = 'all' | 'linked' | 'unlinked';
+export type AdminUserRoleFilter = 'all' | 'manager' | 'player';
+
+export interface AdminUserReadDto {
+  userId: string;
+  displayName: string;
+  provider: string;
+  subject: string;
+  role: 'manager' | 'player';
+  playerId?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AdminUserUpdateDto {
+  role?: 'manager' | 'player';
+  playerId?: string | null;
+}

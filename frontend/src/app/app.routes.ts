@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
 
-import { authGuard, pendingLinkGuard } from './core/auth/auth-guard';
+import { authGuard, managerGuard, pendingLinkGuard } from './core/auth/auth-guard';
 
 export const routes: Routes = [
   {
@@ -50,6 +50,15 @@ export const routes: Routes = [
         (module) => module.SessionListPage,
       ),
     title: 'Sessions | Golf Team Manager',
+  },
+  {
+    path: 'admin/users',
+    canActivate: [managerGuard],
+    loadComponent: () =>
+      import('./features/admin-users/pages/admin-user-page/admin-user-page').then(
+        (module) => module.AdminUserPage,
+      ),
+    title: 'Admin Users | Golf Team Manager',
   },
   {
     path: '**',

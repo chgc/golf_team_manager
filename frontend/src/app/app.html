@@ -3,7 +3,7 @@
 
   @if (isAuthenticated()) {
     <nav aria-label="Primary" class="primary-nav">
-      @for (item of navigationItems; track item.path) {
+      @for (item of navigationItems(); track item.path) {
         <a
           mat-button
           [routerLink]="item.path"

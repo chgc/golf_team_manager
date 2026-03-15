@@ -68,6 +68,29 @@ describe('App', () => {
     expect(compiled.textContent).toContain('Logout');
   });
 
+  it('shows the admin navigation entry for managers', () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Admin Users');
+  });
+
+  it('hides the admin navigation entry for non-managers', () => {
+    principal.set({
+      displayName: 'Demo Player',
+      provider: 'dev_stub',
+      role: 'player',
+      subject: 'dev-player',
+      userId: 'dev-player',
+      playerId: 'player-1',
+    });
+
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+
+    expect((fixture.nativeElement as HTMLElement).textContent).not.toContain('Admin Users');
+  });
+
   it('shows the login action when no principal is active', () => {
     authStatus.set('unauthenticated');
     principal.set(null);
