@@ -1,0 +1,10 @@
+.auth-page {
+  display: flex;
+  justify-content: center;
+  padding-block: 32px;
+}
+
+.auth-card {
+  max-width: 520px;
+  width: 100%;
+}

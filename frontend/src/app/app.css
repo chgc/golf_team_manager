@@ -26,8 +26,20 @@ mat-toolbar {
   margin-left: auto;
 }
 
+.toolbar-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-left: 16px;
+}
+
 .active-link {
   background-color: rgb(255 255 255 / 16%);
+}
+
+.auth-status {
+  font-size: 0.875rem;
 }
 
 .identity-badge {
@@ -36,7 +48,6 @@ mat-toolbar {
   flex-wrap: wrap;
   font-size: 0.875rem;
   gap: 8px;
-  margin-left: 16px;
 }
 
 .identity-divider {
@@ -56,6 +67,7 @@ mat-toolbar {
 
   .app-title,
   .primary-nav,
+  .toolbar-actions,
   .identity-badge {
     flex: 1 1 100%;
     margin-left: 0;

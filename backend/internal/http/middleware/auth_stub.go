@@ -12,22 +12,28 @@ const (
 	debugPlayerIDHeader    = "X-Debug-Player-ID"
 	debugRoleHeader        = "X-Debug-Role"
 	debugSubjectHeader     = "X-Debug-Subject"
+	debugUserIDHeader      = "X-Debug-User-ID"
 )
 
 func DevelopmentAuth(cfg config.AuthConfig) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		subject := valueOrFallback(c.GetHeader(debugSubjectHeader), cfg.DevSubject)
 		principal := auth.Principal{
 			DisplayName: valueOrFallback(c.GetHeader(debugDisplayNameHeader), cfg.DevDisplayName),
 			PlayerID:    valueOrFallback(c.GetHeader(debugPlayerIDHeader), cfg.DevPlayerID),
 			Provider:    auth.ProviderDevelopmentStub,
 			Role:        auth.Role(valueOrFallback(c.GetHeader(debugRoleHeader), cfg.DevRole)),
-			Subject:     valueOrFallback(c.GetHeader(debugSubjectHeader), cfg.DevSubject),
-			UserID:      valueOrFallback(c.GetHeader(debugSubjectHeader), cfg.DevSubject),
+			Subject:     subject,
+			UserID:      valueOrFallback(c.GetHeader(debugUserIDHeader), cfg.DevUserID),
 		}
 
-		c.Set(authContextKey, principal)
+		SetPrincipal(c, principal)
 		c.Next()
 	}
+}
+
+func SetPrincipal(c *gin.Context, principal auth.Principal) {
+	c.Set(authContextKey, principal)
 }
 
 func PrincipalFromContext(c *gin.Context) (auth.Principal, bool) {

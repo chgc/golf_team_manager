@@ -1,9 +1,11 @@
 package repository
 
 import (
+	"database/sql"
 	"fmt"
 	"time"
 
+	"github.com/chgc/golf_team_manager/backend/internal/auth"
 	"github.com/chgc/golf_team_manager/backend/internal/domain"
 )
 
@@ -138,6 +140,51 @@ func scanRegistration(scanTarget scanner) (domain.Registration, error) {
 	registration.UpdatedAt = updatedAt
 
 	return registration, nil
+}
+
+func scanUser(scanTarget scanner) (auth.User, error) {
+	var (
+		user         auth.User
+		playerID     sql.NullString
+		role         string
+		provider     string
+		createdAtRaw string
+		updatedAtRaw string
+	)
+
+	if err := scanTarget.Scan(
+		&user.ID,
+		&playerID,
+		&user.DisplayName,
+		&role,
+		&provider,
+		&user.Subject,
+		&createdAtRaw,
+		&updatedAtRaw,
+	); err != nil {
+		return auth.User{}, err
+	}
+
+	createdAt, err := parseTimestamp(createdAtRaw)
+	if err != nil {
+		return auth.User{}, err
+	}
+
+	updatedAt, err := parseTimestamp(updatedAtRaw)
+	if err != nil {
+		return auth.User{}, err
+	}
+
+	if playerID.Valid {
+		user.PlayerID = playerID.String
+	}
+
+	user.Role = auth.Role(role)
+	user.Provider = auth.Provider(provider)
+	user.CreatedAt = createdAt
+	user.UpdatedAt = updatedAt
+
+	return user, nil
 }
 
 func formatTimestamp(value time.Time) string {

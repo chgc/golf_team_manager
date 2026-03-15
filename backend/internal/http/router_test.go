@@ -10,7 +10,9 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
+	"github.com/chgc/golf_team_manager/backend/internal/auth"
 	"github.com/chgc/golf_team_manager/backend/internal/config"
 	appdb "github.com/chgc/golf_team_manager/backend/internal/db"
 	"github.com/chgc/golf_team_manager/backend/internal/http/handlers"
@@ -59,6 +61,160 @@ func TestGetCurrentPrincipalReturnsDevelopmentStubIdentity(t *testing.T) {
 
 	if response["role"] != "manager" {
 		t.Fatalf("role = %v, want %q", response["role"], "manager")
+	}
+
+	if response["userId"] != "dev-user:dev-manager" {
+		t.Fatalf("userId = %v, want %q", response["userId"], "dev-user:dev-manager")
+	}
+}
+
+func TestGetCurrentPrincipalReturnsLineModeUnauthorizedWithoutToken(t *testing.T) {
+	router, cleanup := newLineTestRouter(t, RouterDependencies{})
+	defer cleanup()
+
+	responseRecorder := performJSONRequest(t, router, nethttp.MethodGet, "/api/auth/me", nil)
+	if responseRecorder.Code != nethttp.StatusUnauthorized {
+		t.Fatalf("status code = %d, want %d", responseRecorder.Code, nethttp.StatusUnauthorized)
+	}
+}
+
+func TestGetCurrentPrincipalReturnsLineModePrincipalWithoutPlayerLink(t *testing.T) {
+	cfg := newLineTestConfig()
+	now := time.Now().UTC()
+	tokenManager := auth.NewHMACTokenManager(cfg.Auth.JWTSecret)
+
+	router, cleanup := newLineTestRouter(t, RouterDependencies{
+		TokenManager: tokenManager,
+	})
+	defer cleanup()
+
+	token, err := tokenManager.Sign(auth.Claims{
+		Subject:         "user-1",
+		Provider:        auth.ProviderLINEOAuth,
+		ProviderSubject: "line-user-1",
+		Role:            auth.RolePlayer,
+		DisplayName:     "王小明",
+		IssuedAt:        now.Unix(),
+		ExpiresAt:       now.Add(time.Hour).Unix(),
+	})
+	if err != nil {
+		t.Fatalf("Sign() error = %v", err)
+	}
+
+	responseRecorder := performJSONRequestWithHeaders(
+		t,
+		router,
+		nethttp.MethodGet,
+		"/api/auth/me",
+		nil,
+		map[string]string{
+			"Authorization": "Bearer " + token,
+		},
+	)
+	if responseRecorder.Code != nethttp.StatusOK {
+		t.Fatalf("status code = %d, want %d", responseRecorder.Code, nethttp.StatusOK)
+	}
+
+	var response map[string]any
+	decodeResponseBody(t, responseRecorder, &response)
+	if _, ok := response["playerId"]; ok {
+		t.Fatalf("playerId present = true, want false")
+	}
+}
+
+func TestLineCallbackCreatesUserAndRedirectsWithJWT(t *testing.T) {
+	cfg := newLineTestConfig()
+	tokenManager := auth.NewHMACTokenManager(cfg.Auth.JWTSecret)
+	lineProvider := &stubLineProvider{
+		authorizeURL: "https://line.example/authorize",
+		tokenResponse: auth.LineTokenResponse{
+			IDToken: "line-id-token",
+		},
+		identity: auth.LineIdentity{
+			Subject:     "line-user-1",
+			DisplayName: "王小明",
+		},
+	}
+
+	router, cleanup, database := newLineTestRouterWithDatabase(t, RouterDependencies{
+		LineProvider: lineProvider,
+		TokenManager: tokenManager,
+	})
+	defer cleanup()
+
+	loginRequest := httptest.NewRequest(nethttp.MethodGet, "/api/auth/line/login", nil)
+	loginResponse := httptest.NewRecorder()
+	router.ServeHTTP(loginResponse, loginRequest)
+
+	if loginResponse.Code != nethttp.StatusFound {
+		t.Fatalf("login status code = %d, want %d", loginResponse.Code, nethttp.StatusFound)
+	}
+
+	cookies := loginResponse.Result().Cookies()
+	if len(cookies) == 0 {
+		t.Fatal("login cookies length = 0, want at least 1")
+	}
+
+	stateCookie := cookies[0]
+	flow, err := auth.DecodeOAuthState(stateCookie.Value)
+	if err != nil {
+		t.Fatalf("DecodeOAuthState() error = %v", err)
+	}
+
+	callbackRequest := httptest.NewRequest(
+		nethttp.MethodGet,
+		"/api/auth/line/callback?code=test-code&state="+flow.State,
+		nil,
+	)
+	callbackRequest.AddCookie(stateCookie)
+	callbackResponse := httptest.NewRecorder()
+	router.ServeHTTP(callbackResponse, callbackRequest)
+
+	if callbackResponse.Code != nethttp.StatusFound {
+		t.Fatalf("callback status code = %d, want %d", callbackResponse.Code, nethttp.StatusFound)
+	}
+
+	location := callbackResponse.Header().Get("Location")
+	if !strings.HasPrefix(location, cfg.Auth.FrontendURL+"/auth/done#token=") {
+		t.Fatalf("redirect location = %q, want prefix %q", location, cfg.Auth.FrontendURL+"/auth/done#token=")
+	}
+
+	if lineProvider.exchangedCode != "test-code" {
+		t.Fatalf("exchanged code = %q, want %q", lineProvider.exchangedCode, "test-code")
+	}
+
+	if lineProvider.verifiedNonce != flow.Nonce {
+		t.Fatalf("verified nonce = %q, want %q", lineProvider.verifiedNonce, flow.Nonce)
+	}
+
+	var (
+		userID      string
+		playerID    sql.NullString
+		displayName string
+		role        string
+	)
+	err = database.QueryRowContext(
+		context.Background(),
+		`SELECT id, player_id, display_name, role FROM users WHERE auth_provider = 'line' AND provider_subject = 'line-user-1'`,
+	).Scan(&userID, &playerID, &displayName, &role)
+	if err != nil {
+		t.Fatalf("select user error = %v", err)
+	}
+
+	if playerID.Valid {
+		t.Fatalf("playerID.Valid = %t, want false", playerID.Valid)
+	}
+
+	if displayName != "王小明" {
+		t.Fatalf("displayName = %q, want %q", displayName, "王小明")
+	}
+
+	if role != "player" {
+		t.Fatalf("role = %q, want %q", role, "player")
+	}
+
+	if userID == "" {
+		t.Fatal("userID is empty")
 	}
 }
 
@@ -1079,6 +1235,71 @@ func newTestRouter(t *testing.T) (*gin.Engine, func()) {
 	}
 
 	return NewRouter(database, testConfig), cleanup
+}
+
+func newLineTestRouter(t *testing.T, deps RouterDependencies) (*gin.Engine, func()) {
+	router, cleanup, _ := newLineTestRouterWithDatabase(t, deps)
+	return router, cleanup
+}
+
+func newLineTestRouterWithDatabase(t *testing.T, deps RouterDependencies) (*gin.Engine, func(), *sql.DB) {
+	t.Helper()
+
+	database := openTestDatabase(t)
+	cleanup := func() {
+		database.Close()
+	}
+
+	return newRouterWithDependencies(database, newLineTestConfig(), deps), cleanup, database
+}
+
+func newLineTestConfig() config.Config {
+	return config.Config{
+		HTTP: config.HTTPConfig{
+			Host:        "127.0.0.1",
+			Port:        8080,
+			ReadTimeout: 5 * time.Second,
+		},
+		DB: config.DBConfig{
+			Path:        "test.sqlite",
+			AutoMigrate: true,
+		},
+		Auth: config.AuthConfig{
+			Mode:             "line",
+			LineClientID:     "line-client",
+			LineClientSecret: "line-secret",
+			LineRedirectURI:  "http://127.0.0.1:8080/api/auth/line/callback",
+			FrontendURL:      "http://localhost:4200",
+			JWTSecret:        "jwt-secret",
+			JWTTTL:           time.Hour,
+		},
+	}
+}
+
+type stubLineProvider struct {
+	authorizeURL    string
+	tokenResponse   auth.LineTokenResponse
+	identity        auth.LineIdentity
+	exchangedCode   string
+	verifiedIDToken string
+	verifiedNonce   string
+}
+
+func (p *stubLineProvider) BuildAuthorizationURL(state string, nonce string) (string, error) {
+	return p.authorizeURL + "?state=" + state + "&nonce=" + nonce, nil
+}
+
+func (p *stubLineProvider) ExchangeCode(_ context.Context, code string) (auth.LineTokenResponse, error) {
+	p.exchangedCode = code
+	return p.tokenResponse, nil
+}
+
+func (p *stubLineProvider) VerifyIDToken(_ context.Context, idToken string, nonce string) (auth.LineIdentity, error) {
+	p.verifiedIDToken = idToken
+	p.verifiedNonce = nonce
+	identity := p.identity
+	identity.Nonce = nonce
+	return identity, nil
 }
 
 func openTestDatabase(t *testing.T) *sql.DB {

@@ -1,25 +1,39 @@
 <mat-toolbar color="primary">
   <span class="app-title">{{ applicationTitle }}</span>
 
-  <nav aria-label="Primary" class="primary-nav">
-    @for (item of navigationItems; track item.path) {
-      <a
-        mat-button
-        [routerLink]="item.path"
-        routerLinkActive="active-link"
-        [routerLinkActiveOptions]="{ exact: item.path === '/' }"
-      >
-        {{ item.label }}
-      </a>
-    }
-  </nav>
+  @if (isAuthenticated()) {
+    <nav aria-label="Primary" class="primary-nav">
+      @for (item of navigationItems; track item.path) {
+        <a
+          mat-button
+          [routerLink]="item.path"
+          routerLinkActive="active-link"
+          [routerLinkActiveOptions]="{ exact: item.path === '/' }"
+        >
+          {{ item.label }}
+        </a>
+      }
+    </nav>
+  }
 
-  <div class="identity-badge" aria-label="Current identity">
-    <span>{{ authPrincipal().displayName }}</span>
-    <span class="identity-divider">|</span>
-    <span>{{ authRoleLabel() }}</span>
-    <span class="identity-divider">|</span>
-    <span>{{ authModeLabel() }}</span>
+  <div class="toolbar-actions">
+    @if (authPrincipal(); as principal) {
+      <div class="identity-badge" aria-label="Current identity">
+        <span>{{ principal.displayName }}</span>
+        <span class="identity-divider">|</span>
+        <span>{{ authRoleLabel() }}</span>
+        <span class="identity-divider">|</span>
+        <span>{{ authModeLabel() }}</span>
+      </div>
+    }
+
+    @if (authStatus() === 'loading') {
+      <span class="auth-status">Checking session…</span>
+    } @else if (isAuthenticated()) {
+      <button mat-button type="button" (click)="logout()">Logout</button>
+    } @else {
+      <a mat-button routerLink="/login">Login</a>
+    }
   </div>
 </mat-toolbar>
 

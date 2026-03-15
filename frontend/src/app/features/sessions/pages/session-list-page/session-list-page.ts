@@ -82,8 +82,8 @@ export class SessionListPage {
   });
 
   protected readonly authPrincipal = this.authShell.principal;
-  protected readonly isManager = computed(() => this.authPrincipal().role === 'manager');
-  protected readonly currentPlayerId = computed(() => this.authPrincipal().playerId ?? null);
+  protected readonly isManager = computed(() => this.authPrincipal()?.role === 'manager');
+  protected readonly currentPlayerId = computed(() => this.authPrincipal()?.playerId ?? null);
 
   protected readonly selectedSession = computed(() => {
     const selectedId = this.selectedSessionId();

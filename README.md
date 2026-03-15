@@ -5,7 +5,7 @@ Golf Team Manager is a golf-team management system repository built with:
 - frontend: Angular + Angular Material + plain CSS + pnpm
 - backend: Go + Gin + SQLite
 
-This repository currently includes the completed v1 foundation baseline plus player, session, registration, and reservation summary reporting flows.
+This repository currently includes the completed v1 foundation baseline plus player, session, registration, reservation summary reporting, and auth flows (`dev_stub` and LINE SSO).
 
 ## Repository Layout
 
@@ -38,6 +38,7 @@ This repository currently includes the completed v1 foundation baseline plus pla
 Use these docs as the canonical entry points for day-to-day development, demo prep, and handoff:
 
 - `docs\development\local-setup.md` for local bootstrap, common commands, and seed/startup entry points
+- `docs\development\auth-setup.md` for auth-mode switching, LINE local setup, login/logout flow, pending-link behavior, and rollback guidance
 - `docs\development\demo-smoke-check.md` for the deterministic dataset and manager/player smoke paths
 - `docs\development\release-readiness-checklist.md` for the pre-demo / pre-release validation gate
 - `docs\development\v1-handoff-summary.md` for the current v1 scope, constraints, and follow-up handoff notes
@@ -78,6 +79,18 @@ Examples:
 - `just backend-seed`
 - `just backend-start`
 
+### Auth modes at a glance
+
+- `AUTH_MODE=dev_stub` remains the default local/dev mode.
+  - `just backend-seed` only works in this mode.
+  - `/api/auth/me` bootstraps directly from the backend debug principal.
+- `AUTH_MODE=line` enables LINE OAuth + JWT auth.
+  - backend requires `LINE_CLIENT_ID`, `LINE_CLIENT_SECRET`, `LINE_REDIRECT_URI`, `FRONTEND_URL`, and `JWT_SECRET`
+  - frontend runtime auth mode is controlled separately through `frontend\public\app-config.js`
+  - local LINE login starts from the backend origin (`http://127.0.0.1:8080/api/auth/line/login`), not the Angular dev-server proxy
+
+Use `.env.example` as a non-secret reference for backend environment variables, and `docs\development\auth-setup.md` for the full local auth workflow.
+
 ### Backend workflow
 
 - Use Gin as the backend framework.
@@ -105,6 +118,7 @@ The current v1 baseline has been validated across:
 
 The current release-readiness and handoff references live under:
 
+- `docs\development\auth-setup.md`
 - `docs\development\release-readiness-checklist.md`
 - `docs\development\v1-handoff-summary.md`
 

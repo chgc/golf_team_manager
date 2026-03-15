@@ -1,0 +1,22 @@
+<section class="auth-page">
+  <mat-card appearance="outlined" class="auth-card">
+    <mat-card-header>
+      <mat-card-title>Completing sign-in</mat-card-title>
+      <mat-card-subtitle>Finishing the auth callback and loading your principal.</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      @if (completionState() === 'failed') {
+        <p>{{ errorMessage() }}</p>
+      } @else {
+        <p>Loading your authenticated session…</p>
+      }
+    </mat-card-content>
+
+    @if (completionState() === 'failed') {
+      <mat-card-actions>
+        <a mat-button routerLink="/login">Return to login</a>
+      </mat-card-actions>
+    }
+  </mat-card>
+</section>
