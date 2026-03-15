@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	defaultHTTPHost          = "127.0.0.1"
+	defaultHTTPHost          = "localhost"
 	defaultHTTPPort          = 8080
 	defaultHTTPReadTimeout   = 5 * time.Second
 	defaultDBPath            = "data\\golf_team_manager.sqlite"

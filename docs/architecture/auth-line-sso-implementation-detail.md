@@ -201,15 +201,15 @@ Initial logout behavior is frontend-only token removal.
 
 ## Local Development Host and Cookie Assumptions
 
-The current frontend dev flow uses Angular dev-server proxying `/api/**` to `http://127.0.0.1:8080`.
+The current frontend dev flow uses Angular dev-server proxying `/api/**` to `http://localhost:8080`.
 
 That proxy is acceptable for normal API traffic, but it is not the default path for starting LINE login in local development because OAuth `state` and `nonce` cookies must round-trip on the backend callback origin.
 
 Local `line` mode assumptions:
 
-- backend public origin: `http://127.0.0.1:8080`
+- backend public origin: `http://localhost:8080`
 - frontend public origin: `http://localhost:4200`
-- LINE callback URI: `http://127.0.0.1:8080/api/auth/line/callback`
+- LINE callback URI: `http://localhost:8080/api/auth/line/callback`
 - frontend post-login landing page: `http://localhost:4200/auth/done`
 
 Implications:

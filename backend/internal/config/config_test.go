@@ -170,7 +170,7 @@ func TestLoadFromEnvRejectsMissingLineConfig(t *testing.T) {
 	t.Setenv(envAuthMode, "line")
 	t.Setenv(envLineClientID, "line-client")
 	t.Setenv(envLineClientSecret, "line-secret")
-	t.Setenv(envLineRedirectURI, "http://127.0.0.1:8080/api/auth/line/callback")
+	t.Setenv(envLineRedirectURI, "http://localhost:8080/api/auth/line/callback")
 	t.Setenv(envFrontendURL, "http://localhost:4200")
 	t.Setenv(envJWTSecret, "")
 
@@ -184,7 +184,7 @@ func TestLoadFromEnvLoadsLineConfig(t *testing.T) {
 	t.Setenv(envAuthMode, "line")
 	t.Setenv(envLineClientID, "line-client")
 	t.Setenv(envLineClientSecret, "line-secret")
-	t.Setenv(envLineRedirectURI, "http://127.0.0.1:8080/api/auth/line/callback")
+	t.Setenv(envLineRedirectURI, "http://localhost:8080/api/auth/line/callback")
 	t.Setenv(envFrontendURL, "http://localhost:4200")
 	t.Setenv(envJWTSecret, "jwt-secret")
 	t.Setenv(envJWTTTL, "45m")
@@ -206,8 +206,8 @@ func TestLoadFromEnvLoadsLineConfig(t *testing.T) {
 		t.Fatalf("Auth.LineClientSecret = %q, want %q", cfg.Auth.LineClientSecret, "line-secret")
 	}
 
-	if cfg.Auth.LineRedirectURI != "http://127.0.0.1:8080/api/auth/line/callback" {
-		t.Fatalf("Auth.LineRedirectURI = %q, want %q", cfg.Auth.LineRedirectURI, "http://127.0.0.1:8080/api/auth/line/callback")
+	if cfg.Auth.LineRedirectURI != "http://localhost:8080/api/auth/line/callback" {
+		t.Fatalf("Auth.LineRedirectURI = %q, want %q", cfg.Auth.LineRedirectURI, "http://localhost:8080/api/auth/line/callback")
 	}
 
 	if cfg.Auth.FrontendURL != "http://localhost:4200" {

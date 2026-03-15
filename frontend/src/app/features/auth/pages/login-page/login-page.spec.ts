@@ -37,7 +37,7 @@ describe('LoginPage', () => {
             isDevelopmentStub: signal(false),
             isLineMode: signal(true),
             isUnlinkedPlayer: signal(false),
-            getLineLoginUrl: () => 'http://127.0.0.1:8080/api/auth/line/login',
+            getLineLoginUrl: () => 'http://localhost:8080/api/auth/line/login',
             rememberPendingRedirect,
             retryDevelopmentBootstrap,
           },
@@ -58,7 +58,7 @@ describe('LoginPage', () => {
   it('renders a direct backend login link for line mode', () => {
     const loginLink = fixture.nativeElement.querySelector('a') as HTMLAnchorElement;
 
-    expect(loginLink.href).toBe('http://127.0.0.1:8080/api/auth/line/login');
+    expect(loginLink.href).toBe('http://localhost:8080/api/auth/line/login');
   });
 
   it('remembers the protected redirect before leaving for line auth', () => {
@@ -67,5 +67,4 @@ describe('LoginPage', () => {
     expect(rememberPendingRedirect).toHaveBeenCalledWith('/sessions');
   });
 });
-
 

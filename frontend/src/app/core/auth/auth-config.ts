@@ -50,11 +50,11 @@ function normalizeBackendOrigin(value: string | undefined, locationOrigin: strin
   }
 
   if (!locationOrigin) {
-    return 'http://127.0.0.1:8080';
+    return 'http://localhost:8080';
   }
 
   if (locationOrigin.endsWith(':4200')) {
-    return 'http://127.0.0.1:8080';
+    return 'http://localhost:8080';
   }
 
   return locationOrigin.replace(/\/+$/, '');

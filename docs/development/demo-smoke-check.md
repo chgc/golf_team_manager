@@ -60,9 +60,9 @@ $headers = @{
   'X-Debug-Display-Name' = 'Ben Lin'
 }
 
-Invoke-RestMethod -Uri 'http://127.0.0.1:8080/api/auth/me' -Headers $headers
-Invoke-RestMethod -Uri 'http://127.0.0.1:8080/api/sessions' -Headers $headers
-Invoke-RestMethod -Uri 'http://127.0.0.1:8080/api/sessions/session-open/registrations' -Headers $headers
+Invoke-RestMethod -Uri 'http://localhost:8080/api/auth/me' -Headers $headers
+Invoke-RestMethod -Uri 'http://localhost:8080/api/sessions' -Headers $headers
+Invoke-RestMethod -Uri 'http://localhost:8080/api/sessions/session-open/registrations' -Headers $headers
 ```
 
 Expected outcome:
@@ -88,7 +88,7 @@ Use this path after the deterministic dataset is already available locally. Seed
   ```javascript
   window.__GTM_AUTH_CONFIG = {
     authMode: 'line',
-    backendOrigin: 'http://127.0.0.1:8080',
+    backendOrigin: 'http://localhost:8080',
   };
   ```
 
@@ -98,7 +98,7 @@ Use this path after the deterministic dataset is already available locally. Seed
   $env:AUTH_MODE = 'line'
   $env:LINE_CLIENT_ID = '<line-channel-id>'
   $env:LINE_CLIENT_SECRET = '<line-channel-secret>'
-  $env:LINE_REDIRECT_URI = 'http://127.0.0.1:8080/api/auth/line/callback'
+  $env:LINE_REDIRECT_URI = 'http://localhost:8080/api/auth/line/callback'
   $env:FRONTEND_URL = 'http://localhost:4200'
   $env:JWT_SECRET = '<local-dev-jwt-secret>'
   $env:JWT_TTL = '1h'
@@ -106,13 +106,13 @@ Use this path after the deterministic dataset is already available locally. Seed
 
 - backend API is running through `just backend-start`
 - frontend app is running through `just frontend-start`
-- the LINE developer app callback is registered as `http://127.0.0.1:8080/api/auth/line/callback`
+- the LINE developer app callback is registered as `http://localhost:8080/api/auth/line/callback`
 
 ### New / unlinked LINE user smoke
 
 1. Open `http://localhost:4200/login`
 2. Click **Continue with LINE**
-3. Confirm the browser navigates to `http://127.0.0.1:8080/api/auth/line/login` before redirecting to LINE
+3. Confirm the browser navigates to `http://localhost:8080/api/auth/line/login` before redirecting to LINE
 4. Complete LINE sign-in
 5. Confirm the backend redirects to `http://localhost:4200/auth/done#token=...`
 6. Confirm the app lands on `/auth/pending-link`

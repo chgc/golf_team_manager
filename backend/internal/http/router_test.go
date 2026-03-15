@@ -1256,7 +1256,7 @@ func newLineTestRouterWithDatabase(t *testing.T, deps RouterDependencies) (*gin.
 func newLineTestConfig() config.Config {
 	return config.Config{
 		HTTP: config.HTTPConfig{
-			Host:        "127.0.0.1",
+			Host:        "localhost",
 			Port:        8080,
 			ReadTimeout: 5 * time.Second,
 		},
@@ -1268,7 +1268,7 @@ func newLineTestConfig() config.Config {
 			Mode:             "line",
 			LineClientID:     "line-client",
 			LineClientSecret: "line-secret",
-			LineRedirectURI:  "http://127.0.0.1:8080/api/auth/line/callback",
+			LineRedirectURI:  "http://localhost:8080/api/auth/line/callback",
 			FrontendURL:      "http://localhost:4200",
 			JWTSecret:        "jwt-secret",
 			JWTTTL:           time.Hour,

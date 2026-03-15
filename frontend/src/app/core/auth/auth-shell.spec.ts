@@ -86,7 +86,7 @@ describe('AuthShell', () => {
           provide: AUTH_RUNTIME_CONFIG,
           useValue: {
             authMode,
-            backendOrigin: 'http://127.0.0.1:8080',
+            backendOrigin: 'http://localhost:8080',
             tokenStorageKey: 'test.auth-token',
             redirectStorageKey: 'test.auth-redirect',
           },

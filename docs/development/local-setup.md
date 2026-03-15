@@ -89,7 +89,7 @@ For local LINE SSO, set the backend env vars first:
 $env:AUTH_MODE = 'line'
 $env:LINE_CLIENT_ID = '<line-channel-id>'
 $env:LINE_CLIENT_SECRET = '<line-channel-secret>'
-$env:LINE_REDIRECT_URI = 'http://127.0.0.1:8080/api/auth/line/callback'
+$env:LINE_REDIRECT_URI = 'http://localhost:8080/api/auth/line/callback'
 $env:FRONTEND_URL = 'http://localhost:4200'
 $env:JWT_SECRET = '<local-dev-jwt-secret>'
 $env:JWT_TTL = '1h'
@@ -101,7 +101,7 @@ Then switch the frontend runtime config in `frontend\public\app-config.js` to ma
 ```javascript
 window.__GTM_AUTH_CONFIG = {
   authMode: 'line',
-  backendOrigin: 'http://127.0.0.1:8080',
+  backendOrigin: 'http://localhost:8080',
 };
 ```
 
@@ -114,8 +114,8 @@ just frontend-start
 Local LINE assumptions:
 
 - frontend origin: `http://localhost:4200`
-- backend origin: `http://127.0.0.1:8080`
-- callback URI: `http://127.0.0.1:8080/api/auth/line/callback`
+- backend origin: `http://localhost:8080`
+- callback URI: `http://localhost:8080/api/auth/line/callback`
 - post-login landing route: `http://localhost:4200/auth/done`
 
 Use the backend origin for LINE login initiation. The Angular `/api/**` proxy is still valid for authenticated API traffic after the JWT is stored, but it is not the default entrypoint for local OAuth login.

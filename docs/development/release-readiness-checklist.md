@@ -50,8 +50,8 @@ Expected outcome:
 For LINE-mode validation, also confirm the local runtime contract before starting the apps:
 
 - [ ] backend env vars are present: `LINE_CLIENT_ID`, `LINE_CLIENT_SECRET`, `LINE_REDIRECT_URI`, `FRONTEND_URL`, `JWT_SECRET`
-- [ ] `frontend\public\app-config.js` is set to `authMode: 'line'` with `backendOrigin: 'http://127.0.0.1:8080'`
-- [ ] LINE callback registration matches `http://127.0.0.1:8080/api/auth/line/callback`
+- [ ] `frontend\public\app-config.js` is set to `authMode: 'line'` with `backendOrigin: 'http://localhost:8080'`
+- [ ] LINE callback registration matches `http://localhost:8080/api/auth/line/callback`
 
 ## Smoke Validation
 
@@ -84,7 +84,7 @@ For LINE-mode validation, also confirm the local runtime contract before startin
 - [ ] Seed flow remains local/dev only.
 - [ ] No release/handoff doc rewrites the smoke steps inconsistently with `demo-smoke-check.md`.
 - [ ] No release/handoff doc presents `dev_stub` behavior as production-ready behavior.
-- [ ] Local LINE guidance still matches the documented origins: frontend `http://localhost:4200`, backend `http://127.0.0.1:8080`.
+- [ ] Local LINE guidance still matches the documented origins: frontend `http://localhost:4200`, backend `http://localhost:8080`.
 - [ ] Auth callback cookies still use the documented local assumptions (`SameSite=Lax`; `Secure` only when frontend or callback uses HTTPS).
 
 ## Known Constraints to Reconfirm

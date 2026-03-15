@@ -88,7 +88,7 @@ Examples:
 - `AUTH_MODE=line` enables LINE OAuth + JWT auth.
   - backend requires `LINE_CLIENT_ID`, `LINE_CLIENT_SECRET`, `LINE_REDIRECT_URI`, `FRONTEND_URL`, and `JWT_SECRET`
   - frontend runtime auth mode is controlled separately through `frontend\public\app-config.js`
-  - local LINE login starts from the backend origin (`http://127.0.0.1:8080/api/auth/line/login`), not the Angular dev-server proxy
+  - local LINE login starts from the backend origin (`http://localhost:8080/api/auth/line/login`), not the Angular dev-server proxy
 
 Use `.env.example` as a non-secret reference for backend environment variables, and `docs\development\auth-setup.md` for the full local auth workflow.
 

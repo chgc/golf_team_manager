@@ -52,7 +52,7 @@ Required local frontend runtime config:
 ```javascript
 window.__GTM_AUTH_CONFIG = {
   authMode: 'line',
-  backendOrigin: 'http://127.0.0.1:8080',
+  backendOrigin: 'http://localhost:8080',
 };
 ```
 
@@ -63,13 +63,13 @@ This runtime config lives in `frontend\public\app-config.js`.
 Current local contract:
 
 - frontend origin: `http://localhost:4200`
-- backend origin: `http://127.0.0.1:8080`
-- callback URI: `http://127.0.0.1:8080/api/auth/line/callback`
+- backend origin: `http://localhost:8080`
+- callback URI: `http://localhost:8080/api/auth/line/callback`
 - post-login landing page: `http://localhost:4200/auth/done`
 
 Operational notes:
 
-- start LINE login from `http://127.0.0.1:8080/api/auth/line/login`
+- start LINE login from `http://localhost:8080/api/auth/line/login`
 - do not rely on the Angular `/api/**` proxy to initiate the OAuth redirect
 - after login succeeds, normal API traffic can keep using the frontend `/api/**` proxy because the frontend sends `Authorization: Bearer <token>`
 - OAuth state and nonce are stored in the `gtm_line_oauth` HttpOnly cookie
@@ -144,7 +144,7 @@ If LINE credentials, callback registration, or the LINE provider are not availab
    ```javascript
    window.__GTM_AUTH_CONFIG = {
      authMode: 'dev_stub',
-     backendOrigin: 'http://127.0.0.1:8080',
+     backendOrigin: 'http://localhost:8080',
    };
    ```
 
