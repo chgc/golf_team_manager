@@ -35,3 +35,4 @@ The `users` table now reserves:
 - replace the dev-stub middleware with a real LINE OAuth integration
 - bind authenticated users to player records where appropriate
 - add route or action-level authorization once feature flows expand
+- see `docs\architecture\auth-line-sso-implementation-detail.md` for the repo-specific follow-up implementation detail
