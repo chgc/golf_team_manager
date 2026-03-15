@@ -9,7 +9,6 @@ import (
 
 	"github.com/chgc/golf_team_manager/backend/internal/domain"
 	"github.com/google/uuid"
-	"modernc.org/sqlite"
 )
 
 type RegistrationRepository interface {
@@ -156,13 +155,4 @@ func (r *SQLiteRegistrationRepository) UpdateStatus(
 	}
 
 	return r.GetByID(ctx, registrationID)
-}
-
-func isSQLiteConstraintError(err error) bool {
-	var sqliteError *sqlite.Error
-	if errors.As(err, &sqliteError) {
-		return sqliteError.Code() == 19
-	}
-
-	return false
 }

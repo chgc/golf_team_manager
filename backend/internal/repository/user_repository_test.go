@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"path/filepath"
 	"testing"
 
@@ -88,6 +89,144 @@ func TestSQLiteUserRepositoryUpsertLineUserPreservesExistingLinkAndRole(t *testi
 	if user.DisplayName != "新名字" {
 		t.Fatalf("user.DisplayName = %q, want %q", user.DisplayName, "新名字")
 	}
+}
+
+func TestSQLiteUserRepositoryListFiltersByLinkStateAndRole(t *testing.T) {
+	database := openUserRepositoryTestDatabase(t)
+	repository := NewSQLiteUserRepository(database)
+
+	seedPlayer(t, database, "player-1")
+	seedUser(
+		t,
+		database,
+		"user-manager-linked",
+		sql.NullString{String: "player-1", Valid: true},
+		"經理",
+		auth.RoleManager,
+		"line",
+		"line-manager",
+	)
+	seedUser(
+		t,
+		database,
+		"user-player-unlinked",
+		sql.NullString{},
+		"球員",
+		auth.RolePlayer,
+		"line",
+		"line-player",
+	)
+
+	users, err := repository.List(context.Background(), UserListFilter{
+		LinkState: UserLinkStateUnlinked,
+		Role:      auth.RolePlayer,
+	})
+	if err != nil {
+		t.Fatalf("List() error = %v", err)
+	}
+
+	if len(users) != 1 {
+		t.Fatalf("len(users) = %d, want 1", len(users))
+	}
+
+	if users[0].ID != "user-player-unlinked" {
+		t.Fatalf("users[0].ID = %q, want %q", users[0].ID, "user-player-unlinked")
+	}
+}
+
+func TestSQLiteUserRepositoryCountByRole(t *testing.T) {
+	database := openUserRepositoryTestDatabase(t)
+	repository := NewSQLiteUserRepository(database)
+
+	seedUser(t, database, "user-manager-1", sql.NullString{}, "經理一", auth.RoleManager, "line", "line-manager-1")
+	seedUser(t, database, "user-manager-2", sql.NullString{}, "經理二", auth.RoleManager, "line", "line-manager-2")
+	seedUser(t, database, "user-player-1", sql.NullString{}, "球員一", auth.RolePlayer, "line", "line-player-1")
+
+	count, err := repository.CountByRole(context.Background(), auth.RoleManager)
+	if err != nil {
+		t.Fatalf("CountByRole() error = %v", err)
+	}
+
+	if count != 2 {
+		t.Fatalf("count = %d, want 2", count)
+	}
+}
+
+func TestSQLiteUserRepositoryUpdateRoleAndPlayerReturnsConflictWhenPlayerAlreadyLinked(t *testing.T) {
+	database := openUserRepositoryTestDatabase(t)
+	repository := NewSQLiteUserRepository(database)
+
+	seedPlayer(t, database, "player-1")
+	seedUser(
+		t,
+		database,
+		"user-1",
+		sql.NullString{String: "player-1", Valid: true},
+		"既有綁定",
+		auth.RolePlayer,
+		"line",
+		"line-user-1",
+	)
+	seedUser(t, database, "user-2", sql.NullString{}, "未綁定", auth.RolePlayer, "line", "line-user-2")
+
+	playerID := "player-1"
+	_, err := repository.UpdateRoleAndPlayer(context.Background(), "user-2", auth.RolePlayer, &playerID)
+	if !errors.Is(err, ErrConflict) {
+		t.Fatalf("UpdateRoleAndPlayer() error = %v, want %v", err, ErrConflict)
+	}
+}
+
+func seedPlayer(t *testing.T, database *sql.DB, playerID string) {
+	t.Helper()
+
+	_, err := database.ExecContext(
+		context.Background(),
+		`INSERT INTO players (id, name, handicap, status, created_at, updated_at)
+		VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+		playerID,
+		"測試球員",
+		12.5,
+		"active",
+	)
+	if err != nil {
+		t.Fatalf("seed player error = %v", err)
+	}
+}
+
+func seedUser(
+	t *testing.T,
+	database *sql.DB,
+	userID string,
+	playerID sql.NullString,
+	displayName string,
+	role auth.Role,
+	provider auth.Provider,
+	subject string,
+) {
+	t.Helper()
+
+	_, err := database.ExecContext(
+		context.Background(),
+		`INSERT INTO users (id, player_id, display_name, role, auth_provider, provider_subject, created_at, updated_at)
+		VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+		userID,
+		nullStringValue(playerID),
+		displayName,
+		role,
+		provider,
+		subject,
+	)
+	if err != nil {
+		t.Fatalf("seed user error = %v", err)
+	}
+}
+
+func nullStringValue(value sql.NullString) any {
+	if value.Valid {
+		return value.String
+	}
+
+	return nil
 }
 
 func openUserRepositoryTestDatabase(t *testing.T) *sql.DB {
