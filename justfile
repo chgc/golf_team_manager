@@ -1,5 +1,7 @@
 set windows-shell := ["powershell.exe", "-NoLogo", "-NoProfile", "-Command"]
 
+frontend_pnpm := if os_family() == "windows" { "pnpm.cmd" } else { "pnpm" }
+
 default:
     @just --list
 
@@ -10,43 +12,43 @@ worktrees:
     git worktree list
 
 plans:
-    Get-ChildItem docs\plans -Recurse -File | Select-Object -ExpandProperty FullName
+    git --no-pager ls-files docs/plans
 
 pending:
-    Get-ChildItem docs\plans\v1-mvp\subagent-work-items\pending -File | Select-Object -ExpandProperty Name
+    git --no-pager ls-files docs/plans/v1-mvp/subagent-work-items/pending
 
 approved:
-    Get-ChildItem docs\plans\v1-mvp\subagent-work-items\approved -File | Select-Object -ExpandProperty Name
+    git --no-pager ls-files docs/plans/v1-mvp/subagent-work-items/approved
 
 completed:
-    Get-ChildItem docs\plans\v1-mvp\subagent-work-items\completed -Recurse -File | Select-Object -ExpandProperty FullName
+    git --no-pager ls-files docs/plans/v1-mvp/subagent-work-items/completed
 
 frontend-dir:
-    Get-Item frontend | Select-Object FullName
+    node -e "console.log(require('path').resolve('frontend'))"
 
 backend-dir:
-    Get-Item backend | Select-Object FullName
+    node -e "console.log(require('path').resolve('backend'))"
 
 backend-start:
-    Set-Location backend; go run ./cmd/api
+    cd backend; go run ./cmd/api
 
 backend-test:
-    Set-Location backend; go test ./...
+    cd backend; go test ./...
 
 backend-migrate:
-    Set-Location backend; go run ./cmd/migrate
+    cd backend; go run ./cmd/migrate
 
 backend-seed:
-    Set-Location backend; go run ./cmd/seed
+    cd backend; go run ./cmd/seed
 
 frontend-install:
-    Set-Location frontend; pnpm.cmd install
+    cd frontend; {{ frontend_pnpm }} install
 
 frontend-start:
-    Set-Location frontend; pnpm.cmd exec ng serve --proxy-config src/proxy.conf.json
+    cd frontend; {{ frontend_pnpm }} exec ng serve --proxy-config src/proxy.conf.json
 
 frontend-build:
-    Set-Location frontend; pnpm.cmd exec ng build
+    cd frontend; {{ frontend_pnpm }} exec ng build
 
 frontend-test:
-    Set-Location frontend; pnpm.cmd exec ng test --watch=false --browsers=ChromeHeadless
+    cd frontend; {{ frontend_pnpm }} exec ng test --watch=false --browsers=ChromeHeadless
