@@ -111,8 +111,11 @@ User-visible behavior:
 
 Current limitation:
 
-- there is no manager-linking UI or API in this repo yet
-- a linked-user LINE smoke requires a manual operator update to `users.player_id`
+- there is no manager-linking UI in this repo yet
+- manager user administration API is now available at:
+  - `GET /api/admin/users`
+  - `PATCH /api/admin/users/:userId`
+- a full in-app linked-user smoke still depends on the manager admin UI landing; before that, operator/API-assisted validation is required
 
 ## Bootstrap the First Manager
 

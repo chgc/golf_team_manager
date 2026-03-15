@@ -72,6 +72,8 @@ func newRouterWithDependencies(database *sql.DB, cfg config.Config, deps RouterD
 	apiProtectedGroup.POST("/sessions/:sessionId/registrations", apiHandlers.CreateRegistration)
 	apiProtectedGroup.PATCH("/registrations/:registrationId", apiHandlers.UpdateRegistration)
 	apiProtectedGroup.GET("/reports/sessions/:sessionId/reservation-summary", apiHandlers.GetReservationSummary)
+	apiProtectedGroup.GET("/admin/users", apiHandlers.ListAdminUsers)
+	apiProtectedGroup.PATCH("/admin/users/:userId", apiHandlers.UpdateAdminUser)
 
 	return router
 }

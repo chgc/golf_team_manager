@@ -15,6 +15,7 @@ import (
 type Handlers struct {
 	playerService       *service.PlayerService
 	reportService       *service.ReportService
+	userAdminService    *service.UserAdminService
 	sessionService      *service.SessionService
 	registrationService *service.RegistrationService
 }
@@ -27,6 +28,7 @@ func NewHandlers(database *sql.DB) *Handlers {
 	return &Handlers{
 		playerService:       service.NewPlayerService(playerRepository),
 		reportService:       service.NewReportService(playerRepository, sessionRepository, registrationRepository),
+		userAdminService:    service.NewUserAdminService(repository.NewSQLiteUserRepository(database), playerRepository),
 		sessionService:      service.NewSessionService(sessionRepository),
 		registrationService: service.NewRegistrationService(playerRepository, sessionRepository, registrationRepository),
 	}

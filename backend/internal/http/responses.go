@@ -39,6 +39,22 @@ func respondError(c *gin.Context, err error) {
 	}
 
 	switch {
+	case errors.Is(err, service.ErrUserNotFound):
+		c.JSON(nethttp.StatusNotFound, ErrorResponse{
+			Error: APIError{Code: "user_not_found", Message: "requested user was not found"},
+		})
+	case errors.Is(err, service.ErrPlayerNotFound):
+		c.JSON(nethttp.StatusNotFound, ErrorResponse{
+			Error: APIError{Code: "player_not_found", Message: "requested player was not found"},
+		})
+	case errors.Is(err, service.ErrPlayerAlreadyLinked):
+		c.JSON(nethttp.StatusConflict, ErrorResponse{
+			Error: APIError{Code: "player_already_linked", Message: "player is already linked to another user"},
+		})
+	case errors.Is(err, service.ErrLastManagerDemotionForbidden):
+		c.JSON(nethttp.StatusConflict, ErrorResponse{
+			Error: APIError{Code: "last_manager_demotion_forbidden", Message: "cannot demote the last manager"},
+		})
 	case errors.Is(err, service.ErrSessionReportNotFound):
 		c.JSON(nethttp.StatusNotFound, ErrorResponse{
 			Error: APIError{Code: "session_not_found", Message: "requested session was not found"},
