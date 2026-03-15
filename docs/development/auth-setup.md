@@ -114,6 +114,32 @@ Current limitation:
 - there is no manager-linking UI or API in this repo yet
 - a linked-user LINE smoke requires a manual operator update to `users.player_id`
 
+## Bootstrap the First Manager
+
+After Phase 9 foundation and bootstrap CLI are available, local / operator setup should stop relying on manual SQLite edits to assign the first manager.
+
+Recommended flow:
+
+1. Let the target user complete one LINE login so the backend creates the `users` row.
+2. Run the admin command from `backend\`:
+
+   ```powershell
+   go run ./cmd/admin promote-user --user-id <user-id>
+   ```
+
+3. Optional: set the initial player link at the same time:
+
+   ```powershell
+   go run ./cmd/admin promote-user --provider line --subject <line-subject> --player-id <player-id>
+   ```
+
+Command rules:
+
+- use either `--user-id` or `--provider` with `--subject`
+- the command only updates an existing `users` row; it never creates a user
+- running it for an already-manager user is an idempotent no-op
+- invalid user / player lookups return a non-zero exit
+
 ## Validation Notes
 
 ### Dev-stub validation
