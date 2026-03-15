@@ -32,6 +32,7 @@ This repository currently includes the completed v1 foundation baseline plus pla
 5. After a proposal is moved to `approved`, commit that approval state before starting implementation.
 6. After implementation is completed, move the task document into:
    - `docs\plans\v1-mvp\subagent-work-items\completed\<date>\`
+7. An implementation task is only fully closed after the code/docs changes are committed **and** the task document has been moved to `completed` in a committed follow-up state.
 
 ## Development Documentation
 

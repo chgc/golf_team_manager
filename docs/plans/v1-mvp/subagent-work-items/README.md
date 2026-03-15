@@ -17,6 +17,7 @@
 9. 文件移到 `approved\` 後，需先將這次核可結果 commit
 10. 完成 commit 後，才可在 `git worktree` 環境下開始實作
 11. 任務完成後，將工作文件移到 `completed\<date>\`
+12. 任務只有在「實作已 commit」且「工作文件移到 `completed\<date>\` 並 commit」後，才算真正結案
 
 ## 目錄
 
@@ -62,5 +63,6 @@ subagent-work-items\
 - 若兩個 reviewer agent 都沒有 blocking issue，可自動將文件從 `pending\` 移到 `approved\`
 - 文件進入 `approved\` 後，未完成 commit 前不得開始實作
 - 任務完成後，需移動到 `completed\<date>\`
+- 若程式已實作但工作文件仍停留在 `approved\`，表示流程尚未完整收尾
 - 若工作範圍變更，需更新文件並重新 review
 - 文件內容應與 `Phase 0`、`Phase 1` 規範保持一致

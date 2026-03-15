@@ -74,6 +74,10 @@
 
 - 任務完成後，將工作文件移到：
   - `docs\plans\v1-mvp\subagent-work-items\completed\YYYY-MM-DD\`
+- 實作任務**不算完成**，直到：
+  - 相關程式 / 文件改動已完成並 commit
+  - 對應 work item 已從 `approved\` 移到 `completed\YYYY-MM-DD\`
+  - 這個完成狀態也已被 commit
 - 交接時需說明：
   - 本次改動影響的路徑
   - 是否新增依賴、命令或限制
