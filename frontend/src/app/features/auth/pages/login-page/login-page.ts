@@ -1,12 +1,11 @@
 import { computed, ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { AuthShell } from '../../../../core/auth/auth-shell';
 
 @Component({
-  imports: [MatButtonModule, MatCardModule],
+  imports: [MatButtonModule],
   templateUrl: './login-page.html',
   styleUrl: './login-page.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -17,9 +16,7 @@ export class LoginPage {
   private readonly router = inject(Router);
 
   protected readonly authPrincipal = this.authShell.principal;
-  protected readonly authStatus = this.authShell.status;
   protected readonly isAuthenticated = this.authShell.isAuthenticated;
-  protected readonly isLineMode = this.authShell.isLineMode;
   protected readonly isUnlinkedPlayer = this.authShell.isUnlinkedPlayer;
   protected readonly lineLoginUrl = computed(() => this.authShell.getLineLoginUrl());
   protected readonly redirectTarget = computed(

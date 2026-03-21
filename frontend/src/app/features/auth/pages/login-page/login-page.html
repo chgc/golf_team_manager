@@ -1,48 +1,55 @@
-<section class="auth-page">
-  <mat-card appearance="outlined" class="auth-card">
-    <mat-card-header>
-      <mat-card-title>Sign in to Golf Team Manager</mat-card-title>
-      <mat-card-subtitle
-        >Authentication is required before protected feature routes can render.</mat-card-subtitle
-      >
-    </mat-card-header>
+<section class="login-page">
+  <div class="login-page__shell">
+    <header class="login-page__brand-block">
+      <p class="login-page__brand-name">Golf Team Manager</p>
+      <span class="login-page__brand-rule" aria-hidden="true"></span>
+      <h1>Welcome back</h1>
+      <p class="login-page__intro">Sign in to manage your team, sessions, and registrations.</p>
+    </header>
 
-    <mat-card-content>
-      @if (isAuthenticated() && authPrincipal(); as principal) {
-        <p>
-          Signed in as <strong>{{ principal.displayName }}</strong
-          >.
-        </p>
-        <p>Continue to the protected app shell, or keep this tab open while you switch accounts.</p>
-      } @else {
-        <p>
-          Continue with LINE to start the backend OAuth flow. The button below targets the backend
-          auth origin directly so the LINE callback cookies stay on the correct host during local
-          development.
-        </p>
-      }
-    </mat-card-content>
+    <div class="login-page__auth-card">
+      <div class="login-page__auth-copy">
+        @if (isAuthenticated() && authPrincipal(); as principal) {
+          <h2>Signed in and ready to continue</h2>
+          <p class="login-page__body-copy">
+            Signed in as <strong>{{ principal.displayName }}</strong
+            >. Continue to the app or keep this tab open while you switch accounts.
+          </p>
+        } @else {
+          <h2>Sign in to your team hub</h2>
+          <p class="login-page__body-copy">
+            Continue with LINE to start authentication and return to your team workspace.
+          </p>
+        }
+      </div>
 
-    <mat-card-actions>
-      @if (isAuthenticated()) {
-        <button
-          mat-flat-button
-          color="primary"
-          type="button"
-          (click)="continueAfterAuthentication()"
-        >
-          Continue
-        </button>
-      } @else {
-        <a
-          mat-flat-button
-          color="primary"
-          [attr.href]="lineLoginUrl()"
-          (click)="rememberRedirect()"
-        >
-          Continue with LINE
-        </a>
-      }
-    </mat-card-actions>
-  </mat-card>
+      <div class="login-page__card-panel">
+        @if (isAuthenticated()) {
+          <button
+            mat-flat-button
+            color="primary"
+            type="button"
+            class="login-page__auth-action"
+            (click)="continueAfterAuthentication()"
+          >
+            Continue to Golf Team Manager
+          </button>
+        } @else {
+          <a
+            mat-flat-button
+            color="primary"
+            class="login-page__auth-action"
+            [attr.href]="lineLoginUrl()"
+            (click)="rememberRedirect()"
+          >
+            <span>Login with LINE</span>
+          </a>
+        }
+      </div>
+    </div>
+  </div>
+
+  <footer class="login-page__footer">
+    <p>Secure access for coaches, players, and administrators.</p>
+  </footer>
 </section>
