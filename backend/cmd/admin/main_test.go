@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/chgc/golf_team_manager/backend/internal/auth"
+	"github.com/chgc/golf_team_manager/backend/internal/repository"
 	"github.com/chgc/golf_team_manager/backend/internal/service"
 )
 
@@ -15,6 +16,79 @@ func TestRunPromoteUserRequiresLookupMode(t *testing.T) {
 	err := run(context.Background(), []string{"promote-user"}, &bytes.Buffer{}, &bytes.Buffer{}, &stubUserAdminService{})
 	if err == nil || !strings.Contains(err.Error(), "either --user-id or --provider with --subject is required") {
 		t.Fatalf("run() error = %v, want lookup requirement", err)
+	}
+}
+
+func TestRunListUsersPrintsUsersTable(t *testing.T) {
+	stdout := &bytes.Buffer{}
+	service := &stubUserAdminService{
+		listResult: []auth.User{
+			{
+				ID:          "user-1",
+				DisplayName: "Alice",
+				Role:        auth.RoleManager,
+				Provider:    auth.ProviderLINEOAuth,
+				Subject:     "subject-1",
+				PlayerID:    "player-1",
+			},
+			{
+				ID:          "user-2",
+				DisplayName: "Bob",
+				Role:        auth.RolePlayer,
+				Provider:    auth.ProviderLINEOAuth,
+				Subject:     "subject-2",
+			},
+		},
+	}
+
+	err := run(context.Background(), []string{"list-users"}, stdout, &bytes.Buffer{}, service)
+	if err != nil {
+		t.Fatalf("run() error = %v", err)
+	}
+
+	got := stdout.String()
+	if !strings.Contains(got, "USER_ID") || !strings.Contains(got, "user-1") || !strings.Contains(got, "subject-2") {
+		t.Fatalf("stdout = %q, want users table", got)
+	}
+
+	if !strings.Contains(got, "\t") && !strings.Contains(got, "  ") {
+		t.Fatalf("stdout = %q, want tabular output", got)
+	}
+}
+
+func TestRunListUsersAppliesFilters(t *testing.T) {
+	service := &stubUserAdminService{}
+
+	err := run(
+		context.Background(),
+		[]string{"list-users", "--role", "manager", "--link-state", "unlinked"},
+		&bytes.Buffer{},
+		&bytes.Buffer{},
+		service,
+	)
+	if err != nil {
+		t.Fatalf("run() error = %v", err)
+	}
+
+	if service.listFilter.Role != auth.RoleManager {
+		t.Fatalf("listFilter.Role = %q, want %q", service.listFilter.Role, auth.RoleManager)
+	}
+
+	if service.listFilter.LinkState != "unlinked" {
+		t.Fatalf("listFilter.LinkState = %q, want %q", service.listFilter.LinkState, "unlinked")
+	}
+}
+
+func TestRunListUsersRejectsUnsupportedRole(t *testing.T) {
+	err := run(
+		context.Background(),
+		[]string{"list-users", "--role", "coach"},
+		&bytes.Buffer{},
+		&bytes.Buffer{},
+		&stubUserAdminService{},
+	)
+	if err == nil || !strings.Contains(err.Error(), "unsupported role") {
+		t.Fatalf("run() error = %v, want unsupported role message", err)
 	}
 }
 
@@ -174,6 +248,9 @@ type stubUserAdminService struct {
 	getByIDResult              auth.User
 	getByProviderSubjectErr    error
 	getByProviderSubjectResult auth.User
+	listErr                    error
+	listFilter                 repository.UserListFilter
+	listResult                 []auth.User
 	updateCalled               bool
 	updateErr                  error
 	updatePlayerID             *string
@@ -186,6 +263,11 @@ func (s *stubUserAdminService) GetByID(context.Context, string) (auth.User, erro
 
 func (s *stubUserAdminService) GetByProviderSubject(context.Context, auth.Provider, string) (auth.User, error) {
 	return s.getByProviderSubjectResult, s.getByProviderSubjectErr
+}
+
+func (s *stubUserAdminService) List(_ context.Context, filter repository.UserListFilter) ([]auth.User, error) {
+	s.listFilter = filter
+	return s.listResult, s.listErr
 }
 
 func (s *stubUserAdminService) Update(

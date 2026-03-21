@@ -32,6 +32,12 @@ backend-dir:
 backend-start:
     cd backend; go run ./cmd/api
 
+list-users *args:
+    node scripts/list-users.mjs {{args}}
+
+promote-manager *args:
+    node scripts/promote-manager.mjs {{args}}
+
 dev:
     node scripts/dev-launcher.mjs
 

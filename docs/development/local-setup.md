@@ -40,6 +40,8 @@ just backend-test
 just backend-migrate
 just backend-seed
 just backend-start
+just list-users
+just promote-manager -- --subject <line-subject>
 just dev
 ```
 

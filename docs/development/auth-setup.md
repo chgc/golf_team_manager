@@ -107,21 +107,60 @@ After Phase 9 foundation and bootstrap CLI are available, local / operator setup
 Recommended flow:
 
 1. Let the target user complete one LINE login so the backend creates the `users` row.
-2. Run the admin command from `backend\`:
+2. If you need the internal `user-id`, list current users from the repository root:
+
+   ```powershell
+   just list-users
+   ```
+
+   Optional filters:
+
+   ```powershell
+   just list-users -- --link-state unlinked
+   just list-users -- --role manager
+   ```
+
+3. Run the helper from the repository root:
+
+   ```powershell
+   just promote-manager -- --user-id <user-id>
+   ```
+
+   For the common LINE-subject flow, the shortcut also supports:
+
+   ```powershell
+   just promote-manager -- --subject <line-subject>
+   ```
+
+4. Optional: set the initial player link at the same time:
+
+   ```powershell
+   just promote-manager -- --subject <line-subject> --player-id <player-id>
+   ```
+
+5. If needed, the Node helpers and backend CLI remain available:
+
+   ```powershell
+   node scripts/list-users.mjs
+   ```
+
+   ```powershell
+   node scripts/promote-manager.mjs --user-id <user-id>
+   ```
+
+   ```powershell
+   Set-Location backend
+   ```
 
    ```powershell
    go run ./cmd/admin promote-user --user-id <user-id>
    ```
 
-3. Optional: set the initial player link at the same time:
-
-   ```powershell
-   go run ./cmd/admin promote-user --provider line --subject <line-subject> --player-id <player-id>
-   ```
-
 Command rules:
 
 - use either `--user-id` or `--provider` with `--subject`
+- use `list-users` if you need to discover the generated `user-id`
+- the helper script defaults `--subject` lookups to `--provider line`
 - the command only updates an existing `users` row; it never creates a user
 - running it for an already-manager user is an idempotent no-op
 - invalid user / player lookups return a non-zero exit

@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 	"strings"
+	"text/tabwriter"
 
 	"github.com/chgc/golf_team_manager/backend/internal/auth"
 	"github.com/chgc/golf_team_manager/backend/internal/config"
@@ -19,6 +20,7 @@ import (
 type userAdminService interface {
 	GetByID(ctx context.Context, userID string) (auth.User, error)
 	GetByProviderSubject(ctx context.Context, provider auth.Provider, subject string) (auth.User, error)
+	List(ctx context.Context, filter repository.UserListFilter) ([]auth.User, error)
 	Update(ctx context.Context, userID string, input service.UserAdminUpdateInput) (auth.User, error)
 }
 
@@ -53,15 +55,88 @@ func main() {
 
 func run(ctx context.Context, args []string, stdout io.Writer, stderr io.Writer, adminService userAdminService) error {
 	if len(args) == 0 {
-		return fmt.Errorf("expected subcommand: promote-user")
+		return fmt.Errorf("expected subcommand: promote-user, list-users")
 	}
 
 	switch args[0] {
+	case "list-users":
+		return runListUsers(ctx, args[1:], stdout, stderr, adminService)
 	case "promote-user":
 		return runPromoteUser(ctx, args[1:], stdout, stderr, adminService)
 	default:
 		return fmt.Errorf("unknown subcommand %q", args[0])
 	}
+}
+
+func runListUsers(
+	ctx context.Context,
+	args []string,
+	stdout io.Writer,
+	stderr io.Writer,
+	adminService userAdminService,
+) error {
+	flagSet := flag.NewFlagSet("list-users", flag.ContinueOnError)
+	flagSet.SetOutput(stderr)
+
+	var (
+		linkState string
+		role      string
+	)
+	flagSet.StringVar(&linkState, "link-state", "", "optional user link-state filter: linked or unlinked")
+	flagSet.StringVar(&role, "role", "", "optional role filter: manager or player")
+
+	if err := flagSet.Parse(args); err != nil {
+		return err
+	}
+
+	if flagSet.NArg() > 0 {
+		return fmt.Errorf("unexpected positional arguments: %s", strings.Join(flagSet.Args(), " "))
+	}
+
+	filter := repository.UserListFilter{}
+
+	if strings.TrimSpace(linkState) != "" {
+		parsedLinkState, err := parseLinkState(linkState)
+		if err != nil {
+			return err
+		}
+		filter.LinkState = parsedLinkState
+	}
+
+	if strings.TrimSpace(role) != "" {
+		parsedRole, err := parseRole(role)
+		if err != nil {
+			return err
+		}
+		filter.Role = parsedRole
+	}
+
+	users, err := adminService.List(ctx, filter)
+	if err != nil {
+		return fmt.Errorf("list users: %w", err)
+	}
+
+	if len(users) == 0 {
+		fmt.Fprintln(stdout, "no users found")
+		return nil
+	}
+
+	writer := tabwriter.NewWriter(stdout, 0, 0, 2, ' ', 0)
+	fmt.Fprintln(writer, "USER_ID\tDISPLAY_NAME\tROLE\tPROVIDER\tSUBJECT\tPLAYER_ID")
+	for _, user := range users {
+		fmt.Fprintf(
+			writer,
+			"%s\t%s\t%s\t%s\t%s\t%s\n",
+			user.ID,
+			user.DisplayName,
+			user.Role,
+			user.Provider,
+			user.Subject,
+			formatOptionalValue(user.PlayerID),
+		)
+	}
+
+	return writer.Flush()
 }
 
 func runPromoteUser(
@@ -200,4 +275,34 @@ func parseProvider(value string) (auth.Provider, error) {
 	default:
 		return "", fmt.Errorf("unsupported provider %q", value)
 	}
+}
+
+func parseRole(value string) (auth.Role, error) {
+	switch auth.Role(strings.TrimSpace(value)) {
+	case auth.RoleManager:
+		return auth.RoleManager, nil
+	case auth.RolePlayer:
+		return auth.RolePlayer, nil
+	default:
+		return "", fmt.Errorf("unsupported role %q", value)
+	}
+}
+
+func parseLinkState(value string) (repository.UserLinkState, error) {
+	switch repository.UserLinkState(strings.TrimSpace(value)) {
+	case repository.UserLinkStateLinked:
+		return repository.UserLinkStateLinked, nil
+	case repository.UserLinkStateUnlinked:
+		return repository.UserLinkStateUnlinked, nil
+	default:
+		return "", fmt.Errorf("unsupported link-state %q", value)
+	}
+}
+
+func formatOptionalValue(value string) string {
+	if strings.TrimSpace(value) == "" {
+		return "-"
+	}
+
+	return value
 }
