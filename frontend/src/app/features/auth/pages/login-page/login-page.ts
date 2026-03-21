@@ -19,7 +19,6 @@ export class LoginPage {
   protected readonly authPrincipal = this.authShell.principal;
   protected readonly authStatus = this.authShell.status;
   protected readonly isAuthenticated = this.authShell.isAuthenticated;
-  protected readonly isDevelopmentStub = this.authShell.isDevelopmentStub;
   protected readonly isLineMode = this.authShell.isLineMode;
   protected readonly isUnlinkedPlayer = this.authShell.isUnlinkedPlayer;
   protected readonly lineLoginUrl = computed(() => this.authShell.getLineLoginUrl());
@@ -29,13 +28,6 @@ export class LoginPage {
 
   protected rememberRedirect() {
     this.authShell.rememberPendingRedirect(this.redirectTarget());
-  }
-
-  protected async retryDevelopmentBootstrap() {
-    const isAuthenticated = await this.authShell.retryDevelopmentBootstrap();
-    if (isAuthenticated) {
-      await this.router.navigateByUrl('/');
-    }
   }
 
   protected async continueAfterAuthentication() {

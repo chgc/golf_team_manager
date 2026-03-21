@@ -1,11 +1,13 @@
 package config
 
 import (
+	"bufio"
 	"fmt"
 	"net"
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -15,22 +17,12 @@ const (
 	defaultHTTPReadTimeout   = 5 * time.Second
 	defaultDBPath            = "data\\golf_team_manager.sqlite"
 	defaultDBAutoMigrate     = true
-	defaultAuthMode          = "dev_stub"
-	defaultAuthRole          = "manager"
-	defaultAuthDisplayName   = "Demo Manager"
-	defaultAuthSubject       = "dev-manager"
 	defaultJWTTTL            = time.Hour
 	envHTTPHost              = "HTTP_HOST"
 	envHTTPPort              = "HTTP_PORT"
 	envHTTPReadHeaderTimeout = "HTTP_READ_HEADER_TIMEOUT"
 	envDBPath                = "DB_PATH"
 	envDBAutoMigrate         = "DB_AUTO_MIGRATE"
-	envAuthMode              = "AUTH_MODE"
-	envAuthRole              = "AUTH_DEV_DEFAULT_ROLE"
-	envAuthDisplayName       = "AUTH_DEV_DEFAULT_NAME"
-	envAuthSubject           = "AUTH_DEV_DEFAULT_SUBJECT"
-	envAuthUserID            = "AUTH_DEV_DEFAULT_USER_ID"
-	envAuthPlayerID          = "AUTH_DEV_DEFAULT_PLAYER_ID"
 	envLineClientID          = "LINE_CLIENT_ID"
 	envLineClientSecret      = "LINE_CLIENT_SECRET"
 	envLineRedirectURI       = "LINE_REDIRECT_URI"
@@ -57,12 +49,6 @@ type DBConfig struct {
 }
 
 type AuthConfig struct {
-	Mode             string
-	DevDisplayName   string
-	DevPlayerID      string
-	DevRole          string
-	DevSubject       string
-	DevUserID        string
 	LineClientID     string
 	LineClientSecret string
 	LineRedirectURI  string
@@ -72,6 +58,10 @@ type AuthConfig struct {
 }
 
 func LoadFromEnv() (Config, error) {
+	if err := loadRootDotEnv(); err != nil {
+		return Config{}, err
+	}
+
 	port, err := loadIntEnv(envHTTPPort, defaultHTTPPort)
 	if err != nil {
 		return Config{}, err
@@ -87,29 +77,12 @@ func LoadFromEnv() (Config, error) {
 		return Config{}, err
 	}
 
-	authMode := loadStringEnv(envAuthMode, defaultAuthMode)
-	if authMode != "dev_stub" && authMode != "line" {
-		return Config{}, fmt.Errorf("%s must be dev_stub or line", envAuthMode)
-	}
-
-	authRole := loadStringEnv(envAuthRole, defaultAuthRole)
-	if authRole != "manager" && authRole != "player" {
-		return Config{}, fmt.Errorf("%s must be manager or player", envAuthRole)
-	}
-
-	devSubject := loadStringEnv(envAuthSubject, defaultAuthSubject)
 	jwtTTL, err := loadDurationEnv(envJWTTTL, defaultJWTTTL)
 	if err != nil {
 		return Config{}, err
 	}
 
 	authConfig := AuthConfig{
-		Mode:             authMode,
-		DevDisplayName:   loadStringEnv(envAuthDisplayName, defaultAuthDisplayName),
-		DevPlayerID:      loadStringEnv(envAuthPlayerID, ""),
-		DevRole:          authRole,
-		DevSubject:       devSubject,
-		DevUserID:        loadStringEnv(envAuthUserID, deriveDevelopmentUserID(devSubject)),
 		LineClientID:     loadStringEnv(envLineClientID, ""),
 		LineClientSecret: loadStringEnv(envLineClientSecret, ""),
 		LineRedirectURI:  loadStringEnv(envLineRedirectURI, ""),
@@ -200,10 +173,6 @@ func loadBoolEnv(key string, fallback bool) (bool, error) {
 }
 
 func validateAuthConfig(cfg AuthConfig) error {
-	if cfg.Mode != "line" {
-		return nil
-	}
-
 	requiredValues := map[string]string{
 		envLineClientID:     cfg.LineClientID,
 		envLineClientSecret: cfg.LineClientSecret,
@@ -214,13 +183,115 @@ func validateAuthConfig(cfg AuthConfig) error {
 
 	for key, value := range requiredValues {
 		if value == "" {
-			return fmt.Errorf("%s is required when %s=line", key, envAuthMode)
+			return fmt.Errorf("%s is required", key)
 		}
 	}
 
 	return nil
 }
 
-func deriveDevelopmentUserID(subject string) string {
-	return "dev-user:" + subject
+func loadRootDotEnv() error {
+	envPath, err := resolveRootDotEnvPath()
+	if err != nil {
+		return err
+	}
+
+	if envPath == "" {
+		return nil
+	}
+
+	file, err := os.Open(envPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		}
+
+		return fmt.Errorf("open %s: %w", envPath, err)
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for lineNumber := 1; scanner.Scan(); lineNumber++ {
+		line := strings.TrimSpace(scanner.Text())
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+
+		if strings.HasPrefix(line, "export ") {
+			line = strings.TrimSpace(strings.TrimPrefix(line, "export "))
+		}
+
+		key, value, found := strings.Cut(line, "=")
+		if !found {
+			return fmt.Errorf("parse %s:%d: expected KEY=VALUE", envPath, lineNumber)
+		}
+
+		key = strings.TrimSpace(key)
+		if key == "" {
+			return fmt.Errorf("parse %s:%d: empty key", envPath, lineNumber)
+		}
+
+		if os.Getenv(key) != "" {
+			continue
+		}
+
+		if err := os.Setenv(key, trimDotEnvValue(value)); err != nil {
+			return fmt.Errorf("set %s from %s:%d: %w", key, envPath, lineNumber, err)
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		return fmt.Errorf("read %s: %w", envPath, err)
+	}
+
+	return nil
+}
+
+func resolveRootDotEnvPath() (string, error) {
+	workingDir, err := os.Getwd()
+	if err != nil {
+		return "", fmt.Errorf("get working directory: %w", err)
+	}
+
+	moduleRoot, found, err := findModuleRoot(workingDir)
+	if err != nil {
+		return "", err
+	}
+
+	if found {
+		return filepath.Join(filepath.Dir(moduleRoot), ".env"), nil
+	}
+
+	return filepath.Join(workingDir, ".env"), nil
+}
+
+func findModuleRoot(startDir string) (string, bool, error) {
+	currentDir := filepath.Clean(startDir)
+
+	for {
+		if _, err := os.Stat(filepath.Join(currentDir, "go.mod")); err == nil {
+			return currentDir, true, nil
+		} else if !os.IsNotExist(err) {
+			return "", false, fmt.Errorf("stat go.mod in %s: %w", currentDir, err)
+		}
+
+		parentDir := filepath.Dir(currentDir)
+		if parentDir == currentDir {
+			return "", false, nil
+		}
+
+		currentDir = parentDir
+	}
+}
+
+func trimDotEnvValue(value string) string {
+	trimmed := strings.TrimSpace(value)
+	if len(trimmed) >= 2 {
+		if (trimmed[0] == '"' && trimmed[len(trimmed)-1] == '"') ||
+			(trimmed[0] == '\'' && trimmed[len(trimmed)-1] == '\'') {
+			return trimmed[1 : len(trimmed)-1]
+		}
+	}
+
+	return trimmed
 }

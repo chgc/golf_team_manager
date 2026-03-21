@@ -13,11 +13,11 @@ This document records the current v1 MVP demo flow after running local seed data
 
 ## Prerequisites
 
-- `AUTH_MODE=dev_stub`
 - `DB_PATH` points to a local SQLite file
 - `just backend-seed` has completed successfully
 - backend API is running through `just backend-start`
 - frontend app is running through `just frontend-start` with local `/api/**` proxying to the backend
+- LINE env vars are configured for backend startup (`LINE_CLIENT_ID`, `LINE_CLIENT_SECRET`, `LINE_REDIRECT_URI`, `FRONTEND_URL`, `JWT_SECRET`)
 
 ## Seeded Demo Dataset
 
@@ -49,37 +49,19 @@ Fixed player smoke identity:
 7. Confirm the registration roster and reservation summary render
 8. Use the copy action and confirm the summary text copies successfully
 
-## Player API Smoke Path
+## Player Smoke Path
 
-Use PowerShell:
-
-```powershell
-$headers = @{
-  'X-Debug-Role' = 'player'
-  'X-Debug-Player-ID' = 'player-ben'
-  'X-Debug-Display-Name' = 'Ben Lin'
-}
-
-Invoke-RestMethod -Uri 'http://localhost:8080/api/auth/me' -Headers $headers
-Invoke-RestMethod -Uri 'http://localhost:8080/api/sessions' -Headers $headers
-Invoke-RestMethod -Uri 'http://localhost:8080/api/sessions/session-open/registrations' -Headers $headers
-```
-
-Expected outcome:
-
-- `/api/auth/me` returns `role=player` and `playerId=player-ben`
-- the open session remains visible
-- the player registration state for `session-open` is present and aligned with the seed data
+Use the linked-user LINE flow in the section below and validate player behavior inside the app after login.
 
 ## Notes
 
-- The seed command is local/dev only and must not be used outside `AUTH_MODE=dev_stub`
-- Player smoke is intentionally defined as API/debug-header smoke, not an in-app role switcher
+- The seed command is local/dev only and should not be used in production workflows
+- Player smoke is validated through normal LINE authentication (no debug-header identity override)
 - This document is the source of truth for demo smoke details; release/handoff docs should link here rather than duplicate the full walkthrough
 
 ## LINE Auth Smoke Path
 
-Use this path after the deterministic dataset is already available locally. Seed first in `dev_stub`, then restart the backend in `line` mode against the same SQLite database.
+Use this path after the deterministic dataset is already available locally.
 
 ### LINE-mode prerequisites
 
@@ -95,7 +77,6 @@ Use this path after the deterministic dataset is already available locally. Seed
 - backend env vars are set:
 
   ```powershell
-  $env:AUTH_MODE = 'line'
   $env:LINE_CLIENT_ID = '<line-channel-id>'
   $env:LINE_CLIENT_SECRET = '<line-channel-secret>'
   $env:LINE_REDIRECT_URI = 'http://localhost:8080/api/auth/line/callback'

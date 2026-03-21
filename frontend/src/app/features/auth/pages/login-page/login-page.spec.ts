@@ -11,9 +11,6 @@ describe('LoginPage', () => {
   const authStatus = signal<'loading' | 'authenticated' | 'unauthenticated'>('unauthenticated');
   const principal = signal(null);
   const rememberPendingRedirect = jasmine.createSpy('rememberPendingRedirect');
-  const retryDevelopmentBootstrap = jasmine
-    .createSpy('retryDevelopmentBootstrap')
-    .and.resolveTo(true);
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -34,12 +31,10 @@ describe('LoginPage', () => {
             principal,
             status: authStatus,
             isAuthenticated: computed(() => authStatus() === 'authenticated' && principal() !== null),
-            isDevelopmentStub: signal(false),
             isLineMode: signal(true),
             isUnlinkedPlayer: signal(false),
             getLineLoginUrl: () => 'http://localhost:8080/api/auth/line/login',
             rememberPendingRedirect,
-            retryDevelopmentBootstrap,
           },
         },
       ],
@@ -52,7 +47,6 @@ describe('LoginPage', () => {
 
   beforeEach(() => {
     rememberPendingRedirect.calls.reset();
-    retryDevelopmentBootstrap.calls.reset();
   });
 
   it('renders a direct backend login link for line mode', () => {

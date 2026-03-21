@@ -30,32 +30,27 @@ func newRouterWithDependencies(database *sql.DB, cfg config.Config, deps RouterD
 	apiPublicGroup := router.Group("/api")
 	apiProtectedGroup := router.Group("/api")
 
-	switch cfg.Auth.Mode {
-	case "line":
-		if deps.TokenManager == nil {
-			deps.TokenManager = auth.NewHMACTokenManager(cfg.Auth.JWTSecret)
-		}
-		if deps.LineProvider == nil {
-			deps.LineProvider = auth.NewHTTPLineProvider(nethttp.DefaultClient, auth.LINEConfig{
-				ClientID:     cfg.Auth.LineClientID,
-				ClientSecret: cfg.Auth.LineClientSecret,
-				RedirectURI:  cfg.Auth.LineRedirectURI,
-			})
-		}
-
-		lineService := auth.NewLineAuthService(
-			deps.LineProvider,
-			repository.NewSQLiteUserRepository(database),
-			deps.TokenManager,
-			cfg.Auth.JWTTTL,
-		)
-		lineHandlers := NewLineAuthHandlers(lineService, cfg.Auth.FrontendURL, shouldSecureAuthCookie(cfg.Auth))
-		apiPublicGroup.GET("/auth/line/login", lineHandlers.Login)
-		apiPublicGroup.GET("/auth/line/callback", lineHandlers.Callback)
-		apiProtectedGroup.Use(middleware.JWTAuth(deps.TokenManager))
-	default:
-		apiProtectedGroup.Use(middleware.DevelopmentAuth(cfg.Auth))
+	if deps.TokenManager == nil {
+		deps.TokenManager = auth.NewHMACTokenManager(cfg.Auth.JWTSecret)
 	}
+	if deps.LineProvider == nil {
+		deps.LineProvider = auth.NewHTTPLineProvider(nethttp.DefaultClient, auth.LINEConfig{
+			ClientID:     cfg.Auth.LineClientID,
+			ClientSecret: cfg.Auth.LineClientSecret,
+			RedirectURI:  cfg.Auth.LineRedirectURI,
+		})
+	}
+
+	lineService := auth.NewLineAuthService(
+		deps.LineProvider,
+		repository.NewSQLiteUserRepository(database),
+		deps.TokenManager,
+		cfg.Auth.JWTTTL,
+	)
+	lineHandlers := NewLineAuthHandlers(lineService, cfg.Auth.FrontendURL, shouldSecureAuthCookie(cfg.Auth))
+	apiPublicGroup.GET("/auth/line/login", lineHandlers.Login)
+	apiPublicGroup.GET("/auth/line/callback", lineHandlers.Callback)
+	apiProtectedGroup.Use(middleware.JWTAuth(deps.TokenManager))
 
 	router.GET("/health", handlers.Health)
 

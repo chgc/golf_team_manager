@@ -56,7 +56,7 @@ describe('auth guards', () => {
     authStatus.set('authenticated');
     principal.set({
       displayName: 'Player One',
-      provider: 'dev_stub',
+      provider: 'line',
       role: 'player',
       subject: 'player-1',
       userId: 'user-1',
@@ -69,7 +69,7 @@ describe('auth guards', () => {
     authStatus.set('authenticated');
     principal.set({
       displayName: 'Manager One',
-      provider: 'dev_stub',
+      provider: 'line',
       role: 'manager',
       subject: 'manager-1',
       userId: 'user-1',
@@ -82,7 +82,7 @@ describe('auth guards', () => {
     authStatus.set('authenticated');
     principal.set({
       displayName: 'Player One',
-      provider: 'dev_stub',
+      provider: 'line',
       role: 'player',
       subject: 'player-1',
       userId: 'user-1',

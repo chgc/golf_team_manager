@@ -10,7 +10,7 @@ describe('App', () => {
   const authStatus = signal<AuthSessionStatus>('authenticated');
   const principal = signal<AuthPrincipal | null>({
     displayName: 'Demo Manager',
-    provider: 'dev_stub',
+    provider: 'line',
     role: 'manager',
     subject: 'dev-manager',
     userId: 'dev-manager',
@@ -28,7 +28,7 @@ describe('App', () => {
             status: authStatus,
             principal,
             roleLabel: computed(() => (principal()?.role === 'manager' ? 'Manager' : 'Player')),
-            authModeLabel: signal('Dev Stub'),
+            authModeLabel: signal('LINE SSO'),
             isAuthenticated: computed(() => authStatus() === 'authenticated' && principal() !== null),
             logout,
           },
@@ -39,7 +39,7 @@ describe('App', () => {
     authStatus.set('authenticated');
     principal.set({
       displayName: 'Demo Manager',
-      provider: 'dev_stub',
+      provider: 'line',
       role: 'manager',
       subject: 'dev-manager',
       userId: 'dev-manager',
@@ -78,7 +78,7 @@ describe('App', () => {
   it('hides the admin navigation entry for non-managers', () => {
     principal.set({
       displayName: 'Demo Player',
-      provider: 'dev_stub',
+      provider: 'line',
       role: 'player',
       subject: 'dev-player',
       userId: 'dev-player',

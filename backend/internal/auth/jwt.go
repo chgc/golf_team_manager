@@ -122,7 +122,7 @@ func validateClaims(claims Claims) error {
 	switch {
 	case claims.Subject == "":
 		return ErrInvalidToken
-	case claims.Provider != ProviderDevelopmentStub && claims.Provider != ProviderLINEOAuth:
+	case claims.Provider != ProviderLINEOAuth:
 		return ErrInvalidToken
 	case claims.ProviderSubject == "":
 		return ErrInvalidToken

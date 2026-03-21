@@ -33,8 +33,7 @@ backend-start:
     cd backend; go run ./cmd/api
 
 dev:
-    Start-Process powershell.exe -ArgumentList '-NoLogo','-NoProfile','-NoExit','-Command','cd backend; go run ./cmd/api'
-    Start-Process powershell.exe -ArgumentList '-NoLogo','-NoProfile','-NoExit','-Command','cd frontend; {{ frontend_pnpm }} exec ng serve --proxy-config src/proxy.conf.json'
+    node scripts/dev-launcher.mjs
 
 backend-test:
     cd backend; go test ./...

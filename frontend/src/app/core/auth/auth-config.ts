@@ -40,7 +40,7 @@ function loadAuthRuntimeConfig(): AuthRuntimeConfig {
 }
 
 function normalizeAuthMode(value: AuthProvider | undefined): AuthProvider {
-  return value === 'line' ? 'line' : 'dev_stub';
+  return 'line';
 }
 
 function normalizeBackendOrigin(value: string | undefined, locationOrigin: string | undefined): string {

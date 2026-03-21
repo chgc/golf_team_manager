@@ -1,22 +1,42 @@
 package config
 
 import (
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 )
 
+func isolateWorkingDir(t *testing.T) string {
+	t.Helper()
+
+	originalDir, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("Getwd() error = %v", err)
+	}
+
+	tempDir := t.TempDir()
+	if err := os.Chdir(tempDir); err != nil {
+		t.Fatalf("Chdir(%q) error = %v", tempDir, err)
+	}
+
+	t.Cleanup(func() {
+		if err := os.Chdir(originalDir); err != nil {
+			t.Fatalf("restore working directory: %v", err)
+		}
+	})
+
+	return tempDir
+}
+
 func TestLoadFromEnvUsesDefaults(t *testing.T) {
+	isolateWorkingDir(t)
 	t.Setenv(envHTTPHost, "")
 	t.Setenv(envHTTPPort, "")
 	t.Setenv(envHTTPReadHeaderTimeout, "")
 	t.Setenv(envDBPath, "")
 	t.Setenv(envDBAutoMigrate, "")
-	t.Setenv(envAuthMode, "")
-	t.Setenv(envAuthRole, "")
-	t.Setenv(envAuthDisplayName, "")
-	t.Setenv(envAuthSubject, "")
-	t.Setenv(envAuthUserID, "")
-	t.Setenv(envAuthPlayerID, "")
 	t.Setenv(envLineClientID, "")
 	t.Setenv(envLineClientSecret, "")
 	t.Setenv(envLineRedirectURI, "")
@@ -24,60 +44,27 @@ func TestLoadFromEnvUsesDefaults(t *testing.T) {
 	t.Setenv(envJWTSecret, "")
 	t.Setenv(envJWTTTL, "")
 
-	cfg, err := LoadFromEnv()
-	if err != nil {
-		t.Fatalf("LoadFromEnv() error = %v", err)
+	_, err := LoadFromEnv()
+	if err == nil {
+		t.Fatal("LoadFromEnv() error = nil, want error")
 	}
-
-	if cfg.HTTP.Host != defaultHTTPHost {
-		t.Fatalf("Host = %q, want %q", cfg.HTTP.Host, defaultHTTPHost)
-	}
-
-	if cfg.HTTP.Port != defaultHTTPPort {
-		t.Fatalf("Port = %d, want %d", cfg.HTTP.Port, defaultHTTPPort)
-	}
-
-	if cfg.HTTP.ReadTimeout != defaultHTTPReadTimeout {
-		t.Fatalf("ReadTimeout = %s, want %s", cfg.HTTP.ReadTimeout, defaultHTTPReadTimeout)
-	}
-
-	if cfg.DB.Path != defaultDBPath {
-		t.Fatalf("DB.Path = %q, want %q", cfg.DB.Path, defaultDBPath)
-	}
-
-	if cfg.DB.AutoMigrate != defaultDBAutoMigrate {
-		t.Fatalf("DB.AutoMigrate = %t, want %t", cfg.DB.AutoMigrate, defaultDBAutoMigrate)
-	}
-
-	if cfg.Auth.Mode != defaultAuthMode {
-		t.Fatalf("Auth.Mode = %q, want %q", cfg.Auth.Mode, defaultAuthMode)
-	}
-
-	if cfg.Auth.DevRole != defaultAuthRole {
-		t.Fatalf("Auth.DevRole = %q, want %q", cfg.Auth.DevRole, defaultAuthRole)
-	}
-
-	if cfg.Auth.DevUserID != deriveDevelopmentUserID(defaultAuthSubject) {
-		t.Fatalf("Auth.DevUserID = %q, want %q", cfg.Auth.DevUserID, deriveDevelopmentUserID(defaultAuthSubject))
-	}
-
-	if cfg.Auth.JWTTTL != defaultJWTTTL {
-		t.Fatalf("Auth.JWTTTL = %s, want %s", cfg.Auth.JWTTTL, defaultJWTTTL)
+	if !strings.HasSuffix(err.Error(), " is required") {
+		t.Fatalf("error = %q, want suffix %q", err.Error(), " is required")
 	}
 }
 
 func TestLoadFromEnvUsesOverrides(t *testing.T) {
+	isolateWorkingDir(t)
 	t.Setenv(envHTTPHost, "0.0.0.0")
 	t.Setenv(envHTTPPort, "9090")
 	t.Setenv(envHTTPReadHeaderTimeout, "3s")
 	t.Setenv(envDBPath, "data\\test.sqlite")
 	t.Setenv(envDBAutoMigrate, "false")
-	t.Setenv(envAuthMode, "dev_stub")
-	t.Setenv(envAuthRole, "player")
-	t.Setenv(envAuthDisplayName, "Demo Player")
-	t.Setenv(envAuthSubject, "dev-player")
-	t.Setenv(envAuthUserID, "dev-user-player")
-	t.Setenv(envAuthPlayerID, "player-1")
+	t.Setenv(envLineClientID, "line-client")
+	t.Setenv(envLineClientSecret, "line-secret")
+	t.Setenv(envLineRedirectURI, "http://localhost:8080/api/auth/line/callback")
+	t.Setenv(envFrontendURL, "http://localhost:4200")
+	t.Setenv(envJWTSecret, "jwt-secret")
 	t.Setenv(envJWTTTL, "30m")
 
 	cfg, err := LoadFromEnv()
@@ -105,32 +92,13 @@ func TestLoadFromEnvUsesOverrides(t *testing.T) {
 		t.Fatal("DB.AutoMigrate = true, want false")
 	}
 
-	if cfg.Auth.DevRole != "player" {
-		t.Fatalf("Auth.DevRole = %q, want %q", cfg.Auth.DevRole, "player")
-	}
-
-	if cfg.Auth.DevDisplayName != "Demo Player" {
-		t.Fatalf("Auth.DevDisplayName = %q, want %q", cfg.Auth.DevDisplayName, "Demo Player")
-	}
-
-	if cfg.Auth.DevSubject != "dev-player" {
-		t.Fatalf("Auth.DevSubject = %q, want %q", cfg.Auth.DevSubject, "dev-player")
-	}
-
-	if cfg.Auth.DevPlayerID != "player-1" {
-		t.Fatalf("Auth.DevPlayerID = %q, want %q", cfg.Auth.DevPlayerID, "player-1")
-	}
-
-	if cfg.Auth.DevUserID != "dev-user-player" {
-		t.Fatalf("Auth.DevUserID = %q, want %q", cfg.Auth.DevUserID, "dev-user-player")
-	}
-
 	if cfg.Auth.JWTTTL != 30*time.Minute {
 		t.Fatalf("Auth.JWTTTL = %s, want %s", cfg.Auth.JWTTTL, 30*time.Minute)
 	}
 }
 
 func TestLoadFromEnvRejectsInvalidPort(t *testing.T) {
+	isolateWorkingDir(t)
 	t.Setenv(envHTTPPort, "70000")
 
 	_, err := LoadFromEnv()
@@ -140,6 +108,7 @@ func TestLoadFromEnvRejectsInvalidPort(t *testing.T) {
 }
 
 func TestLoadFromEnvRejectsInvalidAutoMigrateValue(t *testing.T) {
+	isolateWorkingDir(t)
 	t.Setenv(envDBAutoMigrate, "not-a-bool")
 
 	_, err := LoadFromEnv()
@@ -148,26 +117,8 @@ func TestLoadFromEnvRejectsInvalidAutoMigrateValue(t *testing.T) {
 	}
 }
 
-func TestLoadFromEnvRejectsInvalidAuthRole(t *testing.T) {
-	t.Setenv(envAuthRole, "guest")
-
-	_, err := LoadFromEnv()
-	if err == nil {
-		t.Fatal("LoadFromEnv() error = nil, want error")
-	}
-}
-
-func TestLoadFromEnvRejectsInvalidAuthMode(t *testing.T) {
-	t.Setenv(envAuthMode, "unsupported")
-
-	_, err := LoadFromEnv()
-	if err == nil {
-		t.Fatal("LoadFromEnv() error = nil, want error")
-	}
-}
-
 func TestLoadFromEnvRejectsMissingLineConfig(t *testing.T) {
-	t.Setenv(envAuthMode, "line")
+	isolateWorkingDir(t)
 	t.Setenv(envLineClientID, "line-client")
 	t.Setenv(envLineClientSecret, "line-secret")
 	t.Setenv(envLineRedirectURI, "http://localhost:8080/api/auth/line/callback")
@@ -181,7 +132,7 @@ func TestLoadFromEnvRejectsMissingLineConfig(t *testing.T) {
 }
 
 func TestLoadFromEnvLoadsLineConfig(t *testing.T) {
-	t.Setenv(envAuthMode, "line")
+	isolateWorkingDir(t)
 	t.Setenv(envLineClientID, "line-client")
 	t.Setenv(envLineClientSecret, "line-secret")
 	t.Setenv(envLineRedirectURI, "http://localhost:8080/api/auth/line/callback")
@@ -192,10 +143,6 @@ func TestLoadFromEnvLoadsLineConfig(t *testing.T) {
 	cfg, err := LoadFromEnv()
 	if err != nil {
 		t.Fatalf("LoadFromEnv() error = %v", err)
-	}
-
-	if cfg.Auth.Mode != "line" {
-		t.Fatalf("Auth.Mode = %q, want %q", cfg.Auth.Mode, "line")
 	}
 
 	if cfg.Auth.LineClientID != "line-client" {
@@ -220,5 +167,102 @@ func TestLoadFromEnvLoadsLineConfig(t *testing.T) {
 
 	if cfg.Auth.JWTTTL != 45*time.Minute {
 		t.Fatalf("Auth.JWTTTL = %s, want %s", cfg.Auth.JWTTTL, 45*time.Minute)
+	}
+}
+
+func TestLoadFromEnvLoadsRootDotEnv(t *testing.T) {
+	tempDir := t.TempDir()
+	backendDir := filepath.Join(tempDir, "backend")
+	if err := os.MkdirAll(backendDir, 0o755); err != nil {
+		t.Fatalf("MkdirAll(%q) error = %v", backendDir, err)
+	}
+	if err := os.WriteFile(filepath.Join(backendDir, "go.mod"), []byte("module example.com/test\n"), 0o644); err != nil {
+		t.Fatalf("WriteFile(go.mod) error = %v", err)
+	}
+	if err := os.WriteFile(
+		filepath.Join(tempDir, ".env"),
+		[]byte("LINE_CLIENT_ID=line-client\nLINE_CLIENT_SECRET=line-secret\nLINE_REDIRECT_URI=http://localhost:8080/api/auth/line/callback\nFRONTEND_URL=http://localhost:4200\nJWT_SECRET=jwt-secret\nJWT_TTL=45m\n"),
+		0o644,
+	); err != nil {
+		t.Fatalf("WriteFile(.env) error = %v", err)
+	}
+
+	originalDir, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("Getwd() error = %v", err)
+	}
+	if err := os.Chdir(backendDir); err != nil {
+		t.Fatalf("Chdir(%q) error = %v", backendDir, err)
+	}
+	t.Cleanup(func() {
+		if err := os.Chdir(originalDir); err != nil {
+			t.Fatalf("restore working directory: %v", err)
+		}
+	})
+
+	t.Setenv(envLineClientID, "")
+	t.Setenv(envLineClientSecret, "")
+	t.Setenv(envLineRedirectURI, "")
+	t.Setenv(envFrontendURL, "")
+	t.Setenv(envJWTSecret, "")
+	t.Setenv(envJWTTTL, "")
+
+	cfg, err := LoadFromEnv()
+	if err != nil {
+		t.Fatalf("LoadFromEnv() error = %v", err)
+	}
+
+	if cfg.Auth.LineClientID != "line-client" {
+		t.Fatalf("Auth.LineClientID = %q, want %q", cfg.Auth.LineClientID, "line-client")
+	}
+
+	if cfg.Auth.JWTSecret != "jwt-secret" {
+		t.Fatalf("Auth.JWTSecret = %q, want %q", cfg.Auth.JWTSecret, "jwt-secret")
+	}
+}
+
+func TestLoadFromEnvPrefersProcessEnvOverRootDotEnv(t *testing.T) {
+	tempDir := t.TempDir()
+	backendDir := filepath.Join(tempDir, "backend")
+	if err := os.MkdirAll(backendDir, 0o755); err != nil {
+		t.Fatalf("MkdirAll(%q) error = %v", backendDir, err)
+	}
+	if err := os.WriteFile(filepath.Join(backendDir, "go.mod"), []byte("module example.com/test\n"), 0o644); err != nil {
+		t.Fatalf("WriteFile(go.mod) error = %v", err)
+	}
+	if err := os.WriteFile(
+		filepath.Join(tempDir, ".env"),
+		[]byte("LINE_CLIENT_ID=line-client\nLINE_CLIENT_SECRET=line-secret\nLINE_REDIRECT_URI=http://localhost:8080/api/auth/line/callback\nFRONTEND_URL=http://localhost:4200\nJWT_SECRET=jwt-secret\n"),
+		0o644,
+	); err != nil {
+		t.Fatalf("WriteFile(.env) error = %v", err)
+	}
+
+	originalDir, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("Getwd() error = %v", err)
+	}
+	if err := os.Chdir(backendDir); err != nil {
+		t.Fatalf("Chdir(%q) error = %v", backendDir, err)
+	}
+	t.Cleanup(func() {
+		if err := os.Chdir(originalDir); err != nil {
+			t.Fatalf("restore working directory: %v", err)
+		}
+	})
+
+	t.Setenv(envLineClientID, "shell-client")
+	t.Setenv(envLineClientSecret, "line-secret")
+	t.Setenv(envLineRedirectURI, "http://localhost:8080/api/auth/line/callback")
+	t.Setenv(envFrontendURL, "http://localhost:4200")
+	t.Setenv(envJWTSecret, "jwt-secret")
+
+	cfg, err := LoadFromEnv()
+	if err != nil {
+		t.Fatalf("LoadFromEnv() error = %v", err)
+	}
+
+	if cfg.Auth.LineClientID != "shell-client" {
+		t.Fatalf("Auth.LineClientID = %q, want %q", cfg.Auth.LineClientID, "shell-client")
 	}
 }

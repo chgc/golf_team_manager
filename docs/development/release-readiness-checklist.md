@@ -21,10 +21,8 @@ Use it to confirm that the repository can still be bootstrapped locally, that th
 - [ ] Confirm local development is using the expected v1 baseline:
   - frontend: Angular + Angular Material + plain CSS + pnpm
   - backend: Go + Gin + SQLite
-- [ ] Confirm the intended auth mode is explicit before smoke validation:
-  - `dev_stub` for seed-driven manager/player demo smoke
-  - `line` for LINE OAuth + JWT smoke
-- [ ] Confirm `just backend-seed` is only executed in `AUTH_MODE=dev_stub`.
+- [ ] Confirm LINE OAuth + JWT is configured before smoke validation.
+- [ ] Confirm `just backend-seed` is used only as local deterministic data bootstrap.
 - [ ] Confirm no auth secrets are committed; LINE values stay in local env or deployment-secret storage only.
 
 ## Command Validation
@@ -35,7 +33,6 @@ Run these commands from the repository root unless stated otherwise:
 just backend-test
 just frontend-build
 just frontend-test
-$env:AUTH_MODE = 'dev_stub'
 just backend-seed
 ```
 
@@ -64,9 +61,9 @@ For LINE-mode validation, also confirm the local runtime contract before startin
 
 ### Player Smoke
 
-- [ ] Follow `docs\development\demo-smoke-check.md#player-api-smoke-path`.
-- [ ] Confirm `/api/auth/me` returns the seeded player principal when debug headers are provided.
-- [ ] Confirm the open session remains visible to the player principal.
+- [ ] Follow `docs\development\demo-smoke-check.md#player-smoke-path`.
+- [ ] Confirm player validation is done through LINE login and linked-user flow.
+- [ ] Confirm the open session remains visible to the linked player.
 - [ ] Confirm the player's registration state for `session-open` matches the seeded dataset.
 
 ### LINE Auth Smoke
@@ -83,14 +80,14 @@ For LINE-mode validation, also confirm the local runtime contract before startin
 - [ ] Seed dataset still contains 6 players, 4 sessions, and 7 registrations.
 - [ ] Seed flow remains local/dev only.
 - [ ] No release/handoff doc rewrites the smoke steps inconsistently with `demo-smoke-check.md`.
-- [ ] No release/handoff doc presents `dev_stub` behavior as production-ready behavior.
+- [ ] No release/handoff doc documents debug-header auth bypass as current behavior.
 - [ ] Local LINE guidance still matches the documented origins: frontend `http://localhost:4200`, backend `http://localhost:8080`.
 - [ ] Auth callback cookies still use the documented local assumptions (`SameSite=Lax`; `Secure` only when frontend or callback uses HTTPS).
 
 ## Known Constraints to Reconfirm
 
-- `AUTH_MODE=dev_stub` is still the seed/demo baseline; `line` mode is the auth integration path.
-- Player smoke remains API/debug-header based rather than an in-app role switcher.
+- LINE mode is the only supported auth mode.
+- Player smoke is validated through normal LINE sign-in and linked-user behavior.
 - Newly authenticated LINE users remain blocked on `/auth/pending-link` until an operator or future manager flow links `users.player_id`.
 - Logout is frontend-only because the current app session is a stateless JWT stored locally.
 - Expired or invalid LINE JWTs should fall back to the login flow after the frontend clears the token.

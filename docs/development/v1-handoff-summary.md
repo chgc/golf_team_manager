@@ -26,17 +26,16 @@ The repository currently includes:
 ## Operator / Demo Path Summary
 
 1. Use `docs\development\local-setup.md` to confirm tooling and command entry points.
-2. Set local auth to `AUTH_MODE=dev_stub`.
+2. Set local LINE auth environment variables.
 3. Run `just backend-seed` to rebuild the deterministic demo dataset.
 4. Run the manager and player smoke paths from `docs\development\demo-smoke-check.md`.
 5. Use `docs\development\release-readiness-checklist.md` as the final gate before demo or handoff.
 
 ## Current Constraints and Dev-Only Rules
 
-- Local/demo auth currently depends on `AUTH_MODE=dev_stub`.
-- Debug headers can override the development principal for player smoke checks.
+- Local/demo auth now uses LINE OAuth + JWT only.
 - `backend-seed` is local/dev only and must not be treated as a production data path.
-- Player smoke is intentionally API/debug-header based, not a frontend identity switcher.
+- Player smoke uses normal LINE login and linked-user validation.
 - Local validation assumes the repo's `justfile` command set and a local SQLite database.
 - `just frontend-start` is expected to proxy `/api/**` traffic to the local backend during demo/local smoke use.
 
@@ -44,7 +43,7 @@ The repository currently includes:
 
 - No CI/CD pipeline is included in this release-readiness scope.
 - No production deployment automation is included in this release-readiness scope.
-- Production LINE OAuth integration remains future work; v1 local validation uses the dev-stub baseline.
+- Production-grade secret management and deployment automation remain future work.
 - v1 does not include v2 grouping/tee-time workflows or v3/v4 notification/history/admin extensions.
 
 ## Follow-Up Backlog Boundary

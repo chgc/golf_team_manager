@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/chgc/golf_team_manager/backend/internal/auth"
-	"github.com/chgc/golf_team_manager/backend/internal/config"
 	"github.com/gin-gonic/gin"
 )
 
@@ -22,7 +21,7 @@ func TestListAdminUsersRequiresManagerRole(t *testing.T) {
 		"/api/admin/users",
 		nil,
 		map[string]string{
-			"X-Debug-Role": "player",
+			"Authorization": "Bearer " + mustSignTestToken(t, auth.RolePlayer),
 		},
 	)
 	if response.Code != nethttp.StatusForbidden {
@@ -170,12 +169,7 @@ func newTestRouterWithDatabase(t *testing.T) (*gin.Engine, func(), *sql.DB) {
 		database.Close()
 	}
 
-	testConfig, err := config.LoadFromEnv()
-	if err != nil {
-		t.Fatalf("LoadFromEnv() error = %v", err)
-	}
-
-	return NewRouter(database, testConfig), cleanup, database
+	return NewRouter(database, newLineTestConfig()), cleanup, database
 }
 
 func seedAdminPlayer(t *testing.T, database *sql.DB, playerID string) {

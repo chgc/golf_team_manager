@@ -195,8 +195,6 @@ func lookupUser(
 
 func parseProvider(value string) (auth.Provider, error) {
 	switch auth.Provider(strings.TrimSpace(value)) {
-	case auth.ProviderDevelopmentStub:
-		return auth.ProviderDevelopmentStub, nil
 	case auth.ProviderLINEOAuth:
 		return auth.ProviderLINEOAuth, nil
 	default:

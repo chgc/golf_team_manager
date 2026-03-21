@@ -47,11 +47,39 @@ func TestNewRouterHealthEndpoint(t *testing.T) {
 	}
 }
 
-func TestGetCurrentPrincipalReturnsDevelopmentStubIdentity(t *testing.T) {
-	router, cleanup := newTestRouter(t)
+func TestGetCurrentPrincipalReturnsLineModePrincipalWithToken(t *testing.T) {
+	cfg := newLineTestConfig()
+	now := time.Now().UTC()
+	tokenManager := auth.NewHMACTokenManager(cfg.Auth.JWTSecret)
+
+	router, cleanup := newLineTestRouter(t, RouterDependencies{
+		TokenManager: tokenManager,
+	})
 	defer cleanup()
 
-	responseRecorder := performJSONRequest(t, router, nethttp.MethodGet, "/api/auth/me", nil)
+	token, err := tokenManager.Sign(auth.Claims{
+		Subject:         "user-1",
+		Provider:        auth.ProviderLINEOAuth,
+		ProviderSubject: "line-user-1",
+		Role:            auth.RoleManager,
+		DisplayName:     "Demo Manager",
+		IssuedAt:        now.Unix(),
+		ExpiresAt:       now.Add(time.Hour).Unix(),
+	})
+	if err != nil {
+		t.Fatalf("Sign() error = %v", err)
+	}
+
+	responseRecorder := performJSONRequestWithHeaders(
+		t,
+		router,
+		nethttp.MethodGet,
+		"/api/auth/me",
+		nil,
+		map[string]string{
+			"Authorization": "Bearer " + token,
+		},
+	)
 	if responseRecorder.Code != nethttp.StatusOK {
 		t.Fatalf("status code = %d, want %d", responseRecorder.Code, nethttp.StatusOK)
 	}
@@ -63,8 +91,8 @@ func TestGetCurrentPrincipalReturnsDevelopmentStubIdentity(t *testing.T) {
 		t.Fatalf("role = %v, want %q", response["role"], "manager")
 	}
 
-	if response["userId"] != "dev-user:dev-manager" {
-		t.Fatalf("userId = %v, want %q", response["userId"], "dev-user:dev-manager")
+	if response["userId"] != "user-1" {
+		t.Fatalf("userId = %v, want %q", response["userId"], "user-1")
 	}
 }
 
@@ -72,7 +100,14 @@ func TestGetCurrentPrincipalReturnsLineModeUnauthorizedWithoutToken(t *testing.T
 	router, cleanup := newLineTestRouter(t, RouterDependencies{})
 	defer cleanup()
 
-	responseRecorder := performJSONRequest(t, router, nethttp.MethodGet, "/api/auth/me", nil)
+	responseRecorder := performJSONRequestWithHeaders(
+		t,
+		router,
+		nethttp.MethodGet,
+		"/api/auth/me",
+		nil,
+		map[string]string{"Authorization": ""},
+	)
 	if responseRecorder.Code != nethttp.StatusUnauthorized {
 		t.Fatalf("status code = %d, want %d", responseRecorder.Code, nethttp.StatusUnauthorized)
 	}
@@ -1207,7 +1242,7 @@ func TestGetReservationSummaryValidationAndAuthorizationFlow(t *testing.T) {
 		"/api/reports/sessions/"+eligibleSession["id"].(string)+"/reservation-summary",
 		nil,
 		map[string]string{
-			"X-Debug-Role": "player",
+			"Authorization": "Bearer " + mustSignTestToken(t, auth.RolePlayer),
 		},
 	)
 	if forbiddenResponse.Code != nethttp.StatusForbidden {
@@ -1229,12 +1264,7 @@ func newTestRouter(t *testing.T) (*gin.Engine, func()) {
 		database.Close()
 	}
 
-	testConfig, err := config.LoadFromEnv()
-	if err != nil {
-		t.Fatalf("LoadFromEnv() error = %v", err)
-	}
-
-	return NewRouter(database, testConfig), cleanup
+	return NewRouter(database, newLineTestConfig()), cleanup
 }
 
 func newLineTestRouter(t *testing.T, deps RouterDependencies) (*gin.Engine, func()) {
@@ -1265,7 +1295,6 @@ func newLineTestConfig() config.Config {
 			AutoMigrate: true,
 		},
 		Auth: config.AuthConfig{
-			Mode:             "line",
 			LineClientID:     "line-client",
 			LineClientSecret: "line-secret",
 			LineRedirectURI:  "http://localhost:8080/api/auth/line/callback",
@@ -1354,6 +1383,11 @@ func performJSONRequestWithHeaders(
 
 	request := httptest.NewRequest(method, target, body)
 	request.Header.Set("Content-Type", "application/json")
+	if shouldInjectDefaultAuthHeader(target) {
+		if _, ok := headers["Authorization"]; !ok {
+			request.Header.Set("Authorization", "Bearer "+mustSignTestToken(t, auth.RoleManager))
+		}
+	}
 	for key, value := range headers {
 		request.Header.Set(key, value)
 	}
@@ -1361,6 +1395,35 @@ func performJSONRequestWithHeaders(
 	router.ServeHTTP(responseRecorder, request)
 
 	return responseRecorder
+}
+
+func shouldInjectDefaultAuthHeader(target string) bool {
+	if !strings.HasPrefix(target, "/api/") {
+		return false
+	}
+
+	return !strings.HasPrefix(target, "/api/auth/line/")
+}
+
+func mustSignTestToken(t *testing.T, role auth.Role) string {
+	t.Helper()
+
+	now := time.Now().UTC()
+	tokenManager := auth.NewHMACTokenManager(newLineTestConfig().Auth.JWTSecret)
+	token, err := tokenManager.Sign(auth.Claims{
+		Subject:         "user-test",
+		Provider:        auth.ProviderLINEOAuth,
+		ProviderSubject: "line-user-test",
+		Role:            role,
+		DisplayName:     "Test User",
+		IssuedAt:        now.Unix(),
+		ExpiresAt:       now.Add(time.Hour).Unix(),
+	})
+	if err != nil {
+		t.Fatalf("Sign() error = %v", err)
+	}
+
+	return token
 }
 
 type httpHandler interface {

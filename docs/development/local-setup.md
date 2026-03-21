@@ -40,6 +40,7 @@ just backend-test
 just backend-migrate
 just backend-seed
 just backend-start
+just dev
 ```
 
 Validation results for the completed Phase 1 baseline are tracked in:
@@ -53,40 +54,13 @@ Release/demo/handoff references:
 - `docs\development\release-readiness-checklist.md`
 - `docs\development\v1-handoff-summary.md`
 
-### 3. Choose the auth mode
+### 3. Configure LINE auth
 
-The backend reads environment variables from the shell or process environment. `.env.example` is a reference file only; it is not auto-loaded by the repo commands.
+The backend reads environment variables from the shell or process environment, and it also auto-loads a repository-root `.env` file when one exists. Shell/process environment variables still take precedence over `.env`.
 
-#### Default local mode: `dev_stub`
-
-`dev_stub` is the default backend mode and the only mode that supports `just backend-seed`.
-
-PowerShell example:
+For local LINE SSO, either create a repository-root `.env` from `.env.example` or set the backend env vars in your shell first:
 
 ```powershell
-$env:AUTH_MODE = 'dev_stub'
-$env:DB_PATH = 'data\golf_team_manager.sqlite'
-just backend-seed
-just backend-start
-just frontend-start
-```
-
-Optional `dev_stub` overrides:
-
-- `AUTH_DEV_DEFAULT_ROLE` (`manager` or `player`)
-- `AUTH_DEV_DEFAULT_NAME`
-- `AUTH_DEV_DEFAULT_SUBJECT`
-- `AUTH_DEV_DEFAULT_USER_ID`
-- `AUTH_DEV_DEFAULT_PLAYER_ID`
-
-In `dev_stub`, the frontend bootstraps through `GET /api/auth/me` without a login redirect.
-
-#### LINE mode: `line`
-
-For local LINE SSO, set the backend env vars first:
-
-```powershell
-$env:AUTH_MODE = 'line'
 $env:LINE_CLIENT_ID = '<line-channel-id>'
 $env:LINE_CLIENT_SECRET = '<line-channel-secret>'
 $env:LINE_REDIRECT_URI = 'http://localhost:8080/api/auth/line/callback'
@@ -96,7 +70,7 @@ $env:JWT_TTL = '1h'
 just backend-start
 ```
 
-Then switch the frontend runtime config in `frontend\public\app-config.js` to match LINE mode before starting the Angular dev server:
+Set the frontend runtime config in `frontend\public\app-config.js` before starting the Angular dev server:
 
 ```javascript
 window.__GTM_AUTH_CONFIG = {
@@ -111,6 +85,12 @@ Start the frontend after the runtime config is updated:
 just frontend-start
 ```
 
+Or launch backend and frontend in terminal sessions together:
+
+```powershell
+just dev
+```
+
 Local LINE assumptions:
 
 - frontend origin: `http://localhost:4200`
@@ -122,17 +102,12 @@ Use the backend origin for LINE login initiation. The Angular `/api/**` proxy is
 
 ### 4. Start from a deterministic local dataset
 
-If you need the seeded players/sessions dataset, seed it while `AUTH_MODE=dev_stub`, then restart the backend in `line` mode against the same SQLite file:
+If you need the seeded players/sessions dataset, seed first, then start backend/frontend normally:
 
 ```powershell
-$env:AUTH_MODE = 'dev_stub'
 just backend-seed
-
-$env:AUTH_MODE = 'line'
 just backend-start
 ```
-
-This is useful for local auth smoke checks because the seed command intentionally fails outside `dev_stub`.
 
 ### 5. Subagent implementation flow
 
@@ -153,10 +128,10 @@ This is useful for local auth smoke checks because the seed command intentionall
 - Backend smoke-test and startup commands are exposed through the root `justfile`
 - Backend currently defaults to `backend\data\golf_team_manager.sqlite` and can run migrations with `just backend-migrate`
 - Demo seed data can be rebuilt with `just backend-seed`
-- `backend-seed` is local/dev only and currently requires `AUTH_MODE=dev_stub`
+- `backend-seed` is local/dev only and can be used before normal LINE startup
 - `just frontend-start` now serves the Angular app with `/api/**` proxied to the local backend for smoke/demo use
 - frontend auth runtime mode is controlled by `frontend\public\app-config.js`
-- local LINE mode requires backend env vars plus a frontend runtime switch from `dev_stub` to `line`
+- local startup requires backend LINE env vars and frontend runtime mode `line`
 - new LINE users are created as authenticated but unlinked players and land on `/auth/pending-link` until a manager links them to a player record
 - logout is frontend-only token removal; there is no backend logout endpoint in the current stateless JWT flow
 - The current manager/player demo path is documented in `docs\development\demo-smoke-check.md`

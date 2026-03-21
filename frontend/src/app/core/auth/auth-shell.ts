@@ -29,10 +29,7 @@ export class AuthShell {
   readonly roleLabel = computed(() =>
     this.principal()?.role === 'manager' ? 'Manager' : 'Player',
   );
-  readonly authModeLabel = computed(() =>
-    this.isDevelopmentStub() ? 'Dev Stub' : 'LINE SSO',
-  );
-  readonly isDevelopmentStub = computed(() => this.config.authMode === 'dev_stub');
+  readonly authModeLabel = computed(() => 'LINE SSO');
   readonly isLineMode = computed(() => this.config.authMode === 'line');
   readonly isUnlinkedPlayer = computed(() => {
     const principal = this.principal();
@@ -41,12 +38,6 @@ export class AuthShell {
 
   async initialize(): Promise<void> {
     if (this.initializedState()) {
-      return;
-    }
-
-    if (this.isDevelopmentStub()) {
-      await this.refreshPrincipal();
-      this.initializedState.set(true);
       return;
     }
 
@@ -79,10 +70,6 @@ export class AuthShell {
       this.handlePrincipalRefreshError(error);
       return false;
     }
-  }
-
-  async retryDevelopmentBootstrap(): Promise<boolean> {
-    return this.refreshPrincipal();
   }
 
   async completeLineAuthentication(token: string): Promise<boolean> {

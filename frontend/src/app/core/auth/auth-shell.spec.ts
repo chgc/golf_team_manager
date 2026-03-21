@@ -20,27 +20,6 @@ describe('AuthShell', () => {
     sessionStorage.clear();
   });
 
-  it('bootstraps immediately from /api/auth/me in dev stub mode', async () => {
-    configureTestingModule('dev_stub');
-
-    const initializePromise = service.initialize();
-    const request = httpTestingController.expectOne('/api/auth/me');
-    expect(request.request.method).toBe('GET');
-    request.flush({
-      displayName: 'Demo Manager',
-      provider: 'dev_stub',
-      role: 'manager',
-      subject: 'dev-manager',
-      userId: 'dev-manager',
-    });
-
-    await initializePromise;
-
-    expect(service.status()).toBe('authenticated');
-    expect(service.principal()?.displayName).toBe('Demo Manager');
-    expect(service.isDevelopmentStub()).toBeTrue();
-  });
-
   it('skips /api/auth/me in line mode when no local token exists', async () => {
     configureTestingModule('line');
 
@@ -76,7 +55,7 @@ describe('AuthShell', () => {
     expect(service.status()).toBe('unauthenticated');
   });
 
-  function configureTestingModule(authMode: 'dev_stub' | 'line') {
+  function configureTestingModule(authMode: 'line') {
     TestBed.resetTestingModule();
     TestBed.configureTestingModule({
       providers: [

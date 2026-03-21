@@ -10,8 +10,7 @@ const (
 type Provider string
 
 const (
-	ProviderDevelopmentStub Provider = "dev_stub"
-	ProviderLINEOAuth       Provider = "line"
+	ProviderLINEOAuth Provider = "line"
 )
 
 type Principal struct {

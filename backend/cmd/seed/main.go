@@ -74,10 +74,6 @@ func main() {
 		log.Fatalf("load config: %v", err)
 	}
 
-	if cfg.Auth.Mode != "dev_stub" {
-		log.Fatalf("backend seed requires AUTH_MODE=dev_stub; current value: %s", cfg.Auth.Mode)
-	}
-
 	database, err := appdb.Open(cfg.DB)
 	if err != nil {
 		log.Fatalf("open database: %v", err)

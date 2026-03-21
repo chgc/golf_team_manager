@@ -2,7 +2,7 @@
 
 ## Scope
 
-This document captures the current auth operating model for local development, smoke checks, and handoff. It reflects the implemented `dev_stub` and LINE SSO flows described in `docs\architecture\auth-line-sso-implementation-detail.md`.
+This document captures the current auth operating model for local development, smoke checks, and handoff. It reflects the LINE SSO flow described in `docs\architecture\auth-line-sso-implementation-detail.md`.
 
 ## Related Documents
 
@@ -12,26 +12,7 @@ This document captures the current auth operating model for local development, s
 - `docs\development\demo-smoke-check.md` for step-by-step smoke flows
 - `docs\development\release-readiness-checklist.md` for pre-demo / pre-release sign-off
 
-## Auth Modes
-
-### `AUTH_MODE=dev_stub`
-
-Current default local mode.
-
-- backend injects a development principal through middleware
-- frontend bootstraps immediately from `GET /api/auth/me`
-- `just backend-seed` only works in this mode
-- debug-header overrides remain available for API smoke checks
-
-Supported local overrides:
-
-- `AUTH_DEV_DEFAULT_ROLE`
-- `AUTH_DEV_DEFAULT_NAME`
-- `AUTH_DEV_DEFAULT_SUBJECT`
-- `AUTH_DEV_DEFAULT_USER_ID`
-- `AUTH_DEV_DEFAULT_PLAYER_ID`
-
-### `AUTH_MODE=line`
+## Auth Mode
 
 LINE mode enables the implemented OAuth + JWT flow.
 
@@ -46,6 +27,8 @@ Required backend env vars:
 Optional backend env vars:
 
 - `JWT_TTL` (defaults to `1h`)
+
+For local development, the backend auto-loads a repository-root `.env` file if present. Values already set in the shell still override `.env`.
 
 Required local frontend runtime config:
 
@@ -145,17 +128,10 @@ Command rules:
 
 ## Validation Notes
 
-### Dev-stub validation
-
-- use `just backend-seed`
-- use `just backend-start`
-- use `just frontend-start`
-- validate manager and player smoke through `docs\development\demo-smoke-check.md`
-
 ### LINE validation
 
-- seed the deterministic dataset first in `dev_stub` if you need it
-- restart the backend in `line` mode against the same SQLite file
+- seed the deterministic dataset first if you need it
+- start backend with LINE env config against the same SQLite file
 - confirm login redirects through LINE and returns to `/auth/done#token=...`
 - confirm `/api/auth/me` succeeds after callback
 - confirm a new LINE user lands on `/auth/pending-link`
@@ -165,23 +141,7 @@ Command rules:
 
 ## Rollback / Fallback Guidance
 
-### Local fallback to `dev_stub`
-
-If LINE credentials, callback registration, or the LINE provider are not available during local work:
-
-1. set `AUTH_MODE=dev_stub`
-2. restore `frontend\public\app-config.js` to:
-
-   ```javascript
-   window.__GTM_AUTH_CONFIG = {
-     authMode: 'dev_stub',
-     backendOrigin: 'http://localhost:8080',
-   };
-   ```
-
-3. restart backend and frontend
-
-This restores the local demo/bootstrap path without needing LINE credentials.
+If LINE credentials, callback registration, or the LINE provider are unavailable, local protected flows are blocked until LINE configuration is restored.
 
 ### JWT / callback caveats
 

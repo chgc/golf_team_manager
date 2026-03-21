@@ -5,7 +5,7 @@ Golf Team Manager is a golf-team management system repository built with:
 - frontend: Angular + Angular Material + plain CSS + pnpm
 - backend: Go + Gin + SQLite
 
-This repository currently includes the completed v1 foundation baseline plus player, session, registration, reservation summary reporting, and auth flows (`dev_stub` and LINE SSO).
+This repository currently includes the completed v1 foundation baseline plus player, session, registration, reservation summary reporting, and LINE SSO auth.
 
 ## Repository Layout
 
@@ -80,17 +80,14 @@ Examples:
 - `just backend-seed`
 - `just backend-start`
 
-### Auth modes at a glance
+### Auth at a glance
 
-- `AUTH_MODE=dev_stub` remains the default local/dev mode.
-  - `just backend-seed` only works in this mode.
-  - `/api/auth/me` bootstraps directly from the backend debug principal.
-- `AUTH_MODE=line` enables LINE OAuth + JWT auth.
-  - backend requires `LINE_CLIENT_ID`, `LINE_CLIENT_SECRET`, `LINE_REDIRECT_URI`, `FRONTEND_URL`, and `JWT_SECRET`
-  - frontend runtime auth mode is controlled separately through `frontend\public\app-config.js`
-  - local LINE login starts from the backend origin (`http://localhost:8080/api/auth/line/login`), not the Angular dev-server proxy
+- Local/dev and production now use LINE OAuth + JWT only.
+   - backend requires `LINE_CLIENT_ID`, `LINE_CLIENT_SECRET`, `LINE_REDIRECT_URI`, `FRONTEND_URL`, and `JWT_SECRET`
+   - frontend runtime auth mode is configured through `frontend\public\app-config.js` (set to `line`)
+   - local LINE login starts from the backend origin (`http://localhost:8080/api/auth/line/login`), not the Angular dev-server proxy
 
-Use `.env.example` as a non-secret reference for backend environment variables, and `docs\development\auth-setup.md` for the full local auth workflow.
+Copy `.env.example` to a repository-root `.env` for local backend settings, and use `docs\development\auth-setup.md` for the full local auth workflow.
 
 ### Backend workflow
 

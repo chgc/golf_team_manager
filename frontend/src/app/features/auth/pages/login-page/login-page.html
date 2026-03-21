@@ -13,11 +13,6 @@
         <p>
           Continue to the protected app shell, or keep this tab open while you switch accounts.
         </p>
-      } @else if (isDevelopmentStub()) {
-        <p>
-          Development auth bootstraps through <code>/api/auth/me</code>. If the backend was restarted,
-          retry the bootstrap to reload the dev-stub principal without using a login redirect.
-        </p>
       } @else {
         <p>
           Continue with LINE to start the backend OAuth flow. The button below targets the backend auth
@@ -31,7 +26,7 @@
         <button mat-flat-button color="primary" type="button" (click)="continueAfterAuthentication()">
           Continue
         </button>
-      } @else if (isLineMode()) {
+      } @else {
         <a
           mat-flat-button
           color="primary"
@@ -40,10 +35,6 @@
         >
           Continue with LINE
         </a>
-      } @else {
-        <button mat-flat-button color="primary" type="button" (click)="retryDevelopmentBootstrap()">
-          Retry development auth
-        </button>
       }
     </mat-card-actions>
   </mat-card>
