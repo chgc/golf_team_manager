@@ -29,7 +29,9 @@ describe('App', () => {
             principal,
             roleLabel: computed(() => (principal()?.role === 'manager' ? 'Manager' : 'Player')),
             authModeLabel: signal('LINE SSO'),
-            isAuthenticated: computed(() => authStatus() === 'authenticated' && principal() !== null),
+            isAuthenticated: computed(
+              () => authStatus() === 'authenticated' && principal() !== null,
+            ),
             logout,
           },
         },

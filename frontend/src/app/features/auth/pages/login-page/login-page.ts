@@ -43,4 +43,3 @@ function normalizeRedirect(value: string | null): string | null {
 
   return value;
 }
-

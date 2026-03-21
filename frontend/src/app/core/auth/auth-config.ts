@@ -43,7 +43,10 @@ function normalizeAuthMode(value: AuthProvider | undefined): AuthProvider {
   return 'line';
 }
 
-function normalizeBackendOrigin(value: string | undefined, locationOrigin: string | undefined): string {
+function normalizeBackendOrigin(
+  value: string | undefined,
+  locationOrigin: string | undefined,
+): string {
   const trimmedValue = value?.trim();
   if (trimmedValue) {
     return trimmedValue.replace(/\/+$/, '');

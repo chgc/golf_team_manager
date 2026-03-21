@@ -88,8 +88,5 @@ function createToken(offsetSeconds: number): string {
 }
 
 function encodeTokenPart(payload: object): string {
-  return btoa(JSON.stringify(payload))
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=+$/, '');
+  return btoa(JSON.stringify(payload)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }

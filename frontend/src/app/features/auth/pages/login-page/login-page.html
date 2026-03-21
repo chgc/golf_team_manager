@@ -2,28 +2,35 @@
   <mat-card appearance="outlined" class="auth-card">
     <mat-card-header>
       <mat-card-title>Sign in to Golf Team Manager</mat-card-title>
-      <mat-card-subtitle>Authentication is required before protected feature routes can render.</mat-card-subtitle>
+      <mat-card-subtitle
+        >Authentication is required before protected feature routes can render.</mat-card-subtitle
+      >
     </mat-card-header>
 
     <mat-card-content>
       @if (isAuthenticated() && authPrincipal(); as principal) {
         <p>
-          Signed in as <strong>{{ principal.displayName }}</strong>.
+          Signed in as <strong>{{ principal.displayName }}</strong
+          >.
         </p>
-        <p>
-          Continue to the protected app shell, or keep this tab open while you switch accounts.
-        </p>
+        <p>Continue to the protected app shell, or keep this tab open while you switch accounts.</p>
       } @else {
         <p>
-          Continue with LINE to start the backend OAuth flow. The button below targets the backend auth
-          origin directly so the LINE callback cookies stay on the correct host during local development.
+          Continue with LINE to start the backend OAuth flow. The button below targets the backend
+          auth origin directly so the LINE callback cookies stay on the correct host during local
+          development.
         </p>
       }
     </mat-card-content>
 
     <mat-card-actions>
       @if (isAuthenticated()) {
-        <button mat-flat-button color="primary" type="button" (click)="continueAfterAuthentication()">
+        <button
+          mat-flat-button
+          color="primary"
+          type="button"
+          (click)="continueAfterAuthentication()"
+        >
           Continue
         </button>
       } @else {

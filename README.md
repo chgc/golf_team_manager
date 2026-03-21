@@ -83,9 +83,9 @@ Examples:
 ### Auth at a glance
 
 - Local/dev and production now use LINE OAuth + JWT only.
-   - backend requires `LINE_CLIENT_ID`, `LINE_CLIENT_SECRET`, `LINE_REDIRECT_URI`, `FRONTEND_URL`, and `JWT_SECRET`
-   - frontend runtime auth mode is configured through `frontend\public\app-config.js` (set to `line`)
-   - local LINE login starts from the backend origin (`http://localhost:8080/api/auth/line/login`), not the Angular dev-server proxy
+  - backend requires `LINE_CLIENT_ID`, `LINE_CLIENT_SECRET`, `LINE_REDIRECT_URI`, `FRONTEND_URL`, and `JWT_SECRET`
+  - frontend runtime auth mode is configured through `frontend\public\app-config.js` (set to `line`)
+  - local LINE login starts from the backend origin (`http://localhost:8080/api/auth/line/login`), not the Angular dev-server proxy
 
 Copy `.env.example` to a repository-root `.env` for local backend settings, and use `docs\development\auth-setup.md` for the full local auth workflow.
 

@@ -30,7 +30,9 @@ describe('LoginPage', () => {
           useValue: {
             principal,
             status: authStatus,
-            isAuthenticated: computed(() => authStatus() === 'authenticated' && principal() !== null),
+            isAuthenticated: computed(
+              () => authStatus() === 'authenticated' && principal() !== null,
+            ),
             isLineMode: signal(true),
             isUnlinkedPlayer: signal(false),
             getLineLoginUrl: () => 'http://localhost:8080/api/auth/line/login',
@@ -61,4 +63,3 @@ describe('LoginPage', () => {
     expect(rememberPendingRedirect).toHaveBeenCalledWith('/sessions');
   });
 });
-
